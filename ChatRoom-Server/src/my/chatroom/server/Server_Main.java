@@ -1,6 +1,8 @@
 package my.chatroom.server;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.InetAddress;
@@ -10,10 +12,13 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import my.chatroom.data.server.*;
 import my.chatroom.data.trans.*;
@@ -83,13 +88,57 @@ public class Server_Main implements Runnable
 		// Load ThreadPool
 		int numCores = Runtime.getRuntime().availableProcessors();
 		threadPool = Executors.newFixedThreadPool(numCores);
-		System.out.println("Server_Main: ThreadPool Loaded with " + numCores + " Threads");
+		System.out.println("Server_Main: Thread Pool Loaded with " + numCores + " Threads");
 		
 		// Start thread for each client
-//		new Thread(this).start();
 		threadPool.execute(this);
 		
 		System.out.println("-----Server_Main Loaded-----\n");
+		System.out.println("(Press Enter Key in CMD Window to Shutdown)\n");
+	}
+
+// threadPoolShutdown() API
+	public boolean threadPoolShutdown(int waitTime)
+	{
+		System.out.println("-----Server_Main Shutting Down-----");
+		// Force Shutdown
+		if (waitTime <= 0)
+		{
+			System.out.println("Server_Main: Force Shutting Down");
+			System.exit(0);
+		}
+		
+		// Normal Shutdown
+		System.out.println("Server_Main: Shutting Down with Waiting Time of: " + waitTime + " seconds");
+		threadPool.shutdown(); // Disable new tasks from being submitted
+		try
+		{
+			ss.close(); // Stop ServerSocket
+		} catch (IOException e)
+		{
+			e.printStackTrace();
+			return false;
+		}
+		// Wait for terminations
+		List<Runnable> taskList = null;
+		try {
+			// Wait for existing tasks to terminate
+			if (!threadPool.awaitTermination(waitTime, TimeUnit.SECONDS))
+			{
+				taskList = threadPool.shutdownNow(); // Cancel tasks
+				// Wait for tasks to respond to being cancelled
+				if (!threadPool.awaitTermination(waitTime, TimeUnit.SECONDS)) return false;
+			} 
+		} catch (InterruptedException ie)
+		{
+			// (Re-)Cancel if current thread also interrupted
+			taskList = threadPool.shutdownNow();
+			// Preserve interrupt status
+			Thread.currentThread().interrupt();
+		}
+		System.out.print("Server_Main: Halted Tasks: ");
+		System.out.println(taskList);
+		return true;
 	}
 
 // run()
@@ -105,8 +154,7 @@ public class Server_Main implements Runnable
 		int				    user_id			= 0;
 		
 		// Connect to client
-		try 
-		{
+		try {
 			s = ss.accept();
 			clientAddress = s.getInetAddress().getHostAddress();
 			System.out.println("Server_Main: New client connecting from " + clientAddress);
@@ -119,8 +167,13 @@ public class Server_Main implements Runnable
 			return;
 		} finally // Initiate thread for new client
 		{
-//			new Thread(this).start();
-			threadPool.execute(this);
+			try {
+				threadPool.execute(this);
+			} catch(RejectedExecutionException e)
+			{
+				System.out.println("Server_Main: - New Thread Rejected by Thread Pool " + e.toString());
+				return;
+			}
 		}
 		
 		// Joining
@@ -546,17 +599,24 @@ public class Server_Main implements Runnable
 		
 		if (args.length != 0)
 		{
-			System.out.println("Cmd Line Argument(s) Ignored");
+			System.out.println("Main Loader: Cmd Line Argument(s) Ignored");
 		}
 		try
 		{
-			System.out.println("Server_Main: Initializing Server_Main ...");
-			new Server_Main(1111);
+			System.out.println("Main Loader: Loading Server_Main ...");
+			Server_Main server = new Server_Main(1111);
+			
+			// Wait for CMD input for shutting down (Press Enter Key)
+			InputStreamReader isr = new InputStreamReader(System.in);
+			BufferedReader keyboard = new BufferedReader(isr);
+			keyboard.readLine();
+			System.out.println("Main Loader: is Shutdown Normally: " + server.threadPoolShutdown(1));
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
 		}
+		System.out.println("-----" + new Date() + "-----");
 	}
 
 }
