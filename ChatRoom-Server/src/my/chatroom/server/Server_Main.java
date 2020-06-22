@@ -12,13 +12,15 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import my.chatroom.data.server.*;
 import my.chatroom.data.trans.*;
 import my.chatroom.server.exception.*;
 
 /**
- * {@summary }
+ * 
  * 
  * @author Jiale Hu
  * @version 1.0
@@ -30,25 +32,22 @@ public class Server_Main implements Runnable
 {
 
 // Instance Variables
-	private Server_DB dbServer;
-	private ServerSocket ss;
-	private LinkedList<Integer> offlineUsers;
-	private ConcurrentHashMap<Integer, ObjectOutputStream> onlineUsers = new ConcurrentHashMap<Integer, ObjectOutputStream>();
-	private ConcurrentHashMap<Integer, Queue<Message>> savedMessages;
+	// Service
+	private final Server_DB dbServer;
+	private final ServerSocket ss;
+	private final ExecutorService threadPool;
+	
+	// Data
+	private final LinkedList<Integer> offlineUsers;
+	private final ConcurrentHashMap<Integer, ObjectOutputStream> onlineUsers = new ConcurrentHashMap<Integer, ObjectOutputStream>();
+	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages;
 	
 // Constructor
-	public Server_Main(int socketPort)
+	public Server_Main(int socketPort) throws FetalDataBaseException
 	{
 		// Load DB Server
 		System.out.println("Server_Main: Loading Server_DB ...");
-		try
-		{
-			this.dbServer = new Server_DB();
-		} catch (FetalDataBaseException e)
-		{
-			e.printStackTrace();
-			return;
-		}
+		this.dbServer = new Server_DB();
 		
 		// Update Users Lists
 		System.out.println("Server_Main: Loading Users ...");
@@ -81,8 +80,14 @@ public class Server_Main implements Runnable
 					" is NOT available to accept connections");
 		}
 		
+		// Load ThreadPool
+		int numCores = Runtime.getRuntime().availableProcessors();
+		threadPool = Executors.newFixedThreadPool(numCores);
+		System.out.println("Server_Main: ThreadPool Loaded with " + numCores + " Threads");
+		
 		// Start thread for each client
-		new Thread(this).start();
+//		new Thread(this).start();
+		threadPool.execute(this);
 		
 		System.out.println("-----Server_Main Loaded-----\n");
 	}
@@ -112,9 +117,10 @@ public class Server_Main implements Runnable
 		{
 			System.out.println("Server_Main: - Connect failed from " + clientAddress + " " + e.toString());
 			return;
-		} finally
+		} finally // Initiate thread for new client
 		{
-			new Thread(this).start();
+//			new Thread(this).start();
+			threadPool.execute(this);
 		}
 		
 		// Joining
@@ -533,10 +539,11 @@ public class Server_Main implements Runnable
 		System.out.println(savedMessages);
 	}
 
-// main()
+// main() Loader
 	public static void main(String[] args)
 	{
 		System.out.println("-----" + new Date() + "-----\n");
+		
 		if (args.length != 0)
 		{
 			System.out.println("Cmd Line Argument(s) Ignored");
