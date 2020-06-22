@@ -1,4 +1,4 @@
-package my.chatroom.server;
+package my.chatroom.server.exception;
 
 /**
  * 
@@ -8,7 +8,7 @@ package my.chatroom.server;
  *
  */
 
-public class MessageTypeException extends Exception
+public class FetalDataBaseException extends Exception
 {
 
 	/**
@@ -16,30 +16,30 @@ public class MessageTypeException extends Exception
 	 */
 	private static final long serialVersionUID = 1L;
 
-	public MessageTypeException()
+	public FetalDataBaseException()
 	{
 		// TODO Auto-generated constructor stub
 	}
 
-	public MessageTypeException(String message)
+	public FetalDataBaseException(String message)
 	{
 		super(message);
 		// TODO Auto-generated constructor stub
 	}
 
-	public MessageTypeException(Throwable cause)
+	public FetalDataBaseException(Throwable cause)
 	{
 		super(cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public MessageTypeException(String message, Throwable cause)
+	public FetalDataBaseException(String message, Throwable cause)
 	{
 		super(message, cause);
 		// TODO Auto-generated constructor stub
 	}
 
-	public MessageTypeException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
+	public FetalDataBaseException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace)
 	{
 		super(message, cause, enableSuppression, writableStackTrace);
 		// TODO Auto-generated constructor stub

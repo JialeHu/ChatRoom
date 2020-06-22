@@ -10,6 +10,7 @@ import java.sql.Statement;
 import java.util.concurrent.ConcurrentHashMap;
 
 import my.chatroom.data.server.*;
+import my.chatroom.server.exception.FetalDataBaseException;
 
 /**
  * 

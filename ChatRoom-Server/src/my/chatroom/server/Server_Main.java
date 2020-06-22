@@ -1,6 +1,5 @@
 package my.chatroom.server;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -16,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import my.chatroom.data.server.*;
 import my.chatroom.data.trans.*;
+import my.chatroom.server.exception.*;
 
 /**
  * {@summary }
