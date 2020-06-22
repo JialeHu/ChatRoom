@@ -10,7 +10,7 @@ import java.sql.Statement;
 import java.util.concurrent.ConcurrentHashMap;
 
 import my.chatroom.data.server.*;
-import my.chatroom.server.exception.FetalDataBaseException;
+import my.chatroom.server.exception.FatalDataBaseException;
 
 /**
  * 
@@ -34,7 +34,7 @@ public class Server_DB
 	private ConcurrentHashMap<Integer, User> usersMap = new ConcurrentHashMap<Integer, User>();
 	
 // Constructor
-	public Server_DB() throws FetalDataBaseException
+	public Server_DB() throws FatalDataBaseException
 	{
 		System.out.println("Server_DB: Initializing Server_DB ...");
 		
@@ -47,11 +47,11 @@ public class Server_DB
 		} catch (ClassNotFoundException e)
 		{
 			System.err.println("Server_DB: - Failed to load db2j. " + e.getMessage());
-			throw new FetalDataBaseException("Failed to load db2");
+			throw new FatalDataBaseException("Failed to load db2");
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to connect DB. " + e.getMessage());
-			throw new FetalDataBaseException("Failed to connect DB");
+			throw new FatalDataBaseException("Failed to connect DB");
 		}
 		
 		// Prepare SQL statement

@@ -25,12 +25,12 @@ import my.chatroom.data.trans.*;
 import my.chatroom.server.exception.*;
 
 /**
- * 
+ * Main server program of ChatRoom server,
+ * loaded by calling constructor, shutdown by calling {@code serverShutdown()} method.
  * 
  * @author Jiale Hu
  * @version 1.0
  * @since 05/05/2020
- *
  */
 
 public class Server_Main implements Runnable
@@ -48,7 +48,12 @@ public class Server_Main implements Runnable
 	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages;
 	
 // Constructor
-	public Server_Main(int socketPort) throws FetalDataBaseException
+	/**
+	 * Constructs main server program, loads required services: Server_DB, ServerSocket, Thread Pool.
+	 * @param socketPort four-digit socket port number
+	 * @throws FatalDataBaseException if Server_DB encounters fatal error when loading
+	 */
+	public Server_Main(int socketPort) throws FatalDataBaseException
 	{
 		// Load DB Server
 		System.out.println("Server_Main: Loading Server_DB ...");
@@ -94,11 +99,16 @@ public class Server_Main implements Runnable
 		threadPool.execute(this);
 		
 		System.out.println("-----Server_Main Loaded-----\n");
-		System.out.println("(Press Enter Key in CMD Window to Shutdown)\n");
+		System.out.println("Ready for Connections ... (Press Enter Key in CMD Window to Shutdown)\n");
 	}
 
-// threadPoolShutdown() API
-	public boolean threadPoolShutdown(int waitTime)
+// serverShutdown() API
+	/**
+	 * Server shutdown API for server loader to call.
+	 * @param waitTime number of seconds to wait, if {@code waitTime <= 0} proceed force shutdown
+	 * @return {@code true} if shutdown finished normally
+	 */
+	public boolean serverShutdown(int waitTime)
 	{
 		System.out.println("-----Server_Main Shutting Down-----");
 		// Force Shutdown
@@ -142,6 +152,16 @@ public class Server_Main implements Runnable
 	}
 
 // run()
+	/**
+	 * {@code run()} method for each thread. (One user per thread)
+	 * Accepts input stream from clients, initiates new thread when current thread has been assigned to a user.
+	 * Life cycle of a thread for a user: 
+	 * 	- check incoming object type
+	 * 	- check {@code Message} type
+	 * 	- log user in or add new user depending on {@code Message} type
+	 * 	- leaving or re-joining processing if caught exception while in chat processing
+	 * 	- thread terminates when user leave or unexpected exceptions are caught
+	 */
 	@Override
 	public void run()
 	{
@@ -289,6 +309,12 @@ public class Server_Main implements Runnable
 	}
 	
 // Check Message Type
+	/**
+	 * Check incoming {@code Object} type, return {@code Message} type if it is in this type.
+	 * @param msg {@code Object} to be checked
+	 * @return same object in {@code Message} type
+	 * @throws MessageTypeException if incoming {@code Object} is not in {@code Message} type
+	 */
 	private MsgType checkMsgType(Object msg) throws MessageTypeException
 	{
 		if (msg instanceof Message)
@@ -296,11 +322,17 @@ public class Server_Main implements Runnable
 			return ((Message) msg).getMsgType();
 		} else
 		{
-			throw new MessageTypeException("Not int Type Message");
+			throw new MessageTypeException("Not in Type Message");
 		}
 	}
 	
 // Join Processing
+	/**
+	 * Does joining processing for existing users, including id check, password check, user list update.
+	 * @param joinMsg joining {@code Message}
+	 * @param oos {@code ObjectOutputStream} of this user
+	 * @return {@code true} if join succeed
+	 */
 	private boolean join(Message joinMsg, ObjectOutputStream oos)
 	{
 		int user_id = joinMsg.getUser_id();
@@ -406,6 +438,13 @@ public class Server_Main implements Runnable
 	}
 	
 // Chat Processing
+	/**
+	 * Does chat processing for a online user, including send/receive message, user info request, user removal, user settings.
+	 * @param user_id user id of this user
+	 * @param ois {@code ObjectInputStream} of this user
+	 * @param oos {@code ObjectOutputStream} of this user
+	 * @throws Exception {@code ObjectInputStream} and {@code ObjectOutputStream} Exceptions for caller to handle
+	 */
 	private void chat(int user_id, ObjectInputStream ois, ObjectOutputStream oos) throws Exception
 	{
 		// Keep Receiving
@@ -487,6 +526,11 @@ public class Server_Main implements Runnable
 	}
 	
 // Leave Processing
+	/**
+	 * Does leaving processing when a user leaves, including re-joining processing and user list updating.
+	 * @param user_id user id
+	 * @param oos current {@code ObjectOutputStream} for this user
+	 */
 	private void leave(int user_id, ObjectOutputStream oos)
 	{
 		// Re-Join Situation
@@ -506,6 +550,12 @@ public class Server_Main implements Runnable
 	}
 	
 // Add User
+	/**
+	 * Add a new user to server and database.
+	 * @param nick_name nick name of user
+	 * @param password password for login
+	 * @return new user id, or 0 if failed adding user
+	 */
 	private int addUser(String nick_name, String password)
 	{
 		try
@@ -524,6 +574,9 @@ public class Server_Main implements Runnable
 		return 0;
 	}
 // Send User List
+	/**
+	 * Send current user list (online and offline) to all online users.
+	 */
 	private synchronized void sendUserList()
 	{
 		// <Integer,String>
@@ -542,6 +595,11 @@ public class Server_Main implements Runnable
 	}
 	
 // Send To All
+	/**
+	 * Send/save {@code Message} to all recipient(s),
+	 * only {@code Message} of {@code MsgType.MESSAGE} are saved.
+	 * @param msg {@code Message} to be sent/saved
+	 */
 	private synchronized void sendToAll(Message msg)
 	{
 		// Send to online users
@@ -567,6 +625,11 @@ public class Server_Main implements Runnable
 	}
 	
 // Send To
+	/**
+	 * Send/save {@code Message} to specified recipient(s).
+	 * @param msg {@code Message} to be sent/saved
+	 * @param recipient_id an array of recipient id
+	 */
 	private synchronized void sendTo(Message msg, int[] recipient_id)
 	{
 		for (int id : recipient_id)
@@ -593,6 +656,10 @@ public class Server_Main implements Runnable
 	}
 
 // main() Loader
+	/**
+	 * Temporary loader of server programs.
+	 * @param args is ignored
+	 */
 	public static void main(String[] args)
 	{
 		System.out.println("-----" + new Date() + "-----\n");
@@ -612,7 +679,7 @@ public class Server_Main implements Runnable
 			InputStreamReader isr = new InputStreamReader(System.in);
 			BufferedReader keyboard = new BufferedReader(isr);
 			keyboard.readLine();
-			System.out.println("Main Loader: is Shutdown Normally: " + server.threadPoolShutdown(1)); // Wait for 1 second in shutdown
+			System.out.println("Main Loader: is Shutdown Normally: " + server.serverShutdown(1)); // Wait for 1 second in shutdown
 		}
 		catch(Exception e)
 		{
