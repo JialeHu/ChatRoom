@@ -1,7 +1,7 @@
-2020-06-22 06:12:19.520 GMT Thread[main,5,main] Class db2j.do.c java.lang.ClassNotFoundException: db2j.do.c, module ignored.
+2020-06-22 06:15:16.589 GMT Thread[main,5,main] Class db2j.do.c java.lang.ClassNotFoundException: db2j.do.c, module ignored.
 ----------------------------------------------------------------
-2020-06-22 06:12:19.546 GMT:
- Booting Cloudscape version IBM Corp. - DBMS:db2j - 5.1.60.17 - (30436): instance c013800d-0172-daa7-f3be-00000f8c51b8
+2020-06-22 06:15:16.614 GMT:
+ Booting Cloudscape version IBM Corp. - DBMS:db2j - 5.1.60.17 - (30436): instance c013800d-0172-daaa-a76c-00000f6c5f20
 on database directory /Users/hjl/git/ChatRoom/ChatRoom-Server/database/QuoteDB 
 
 Database Class Loader started - db2j.database.classpath=''
