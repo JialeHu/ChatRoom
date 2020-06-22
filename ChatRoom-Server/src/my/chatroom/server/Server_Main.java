@@ -606,11 +606,13 @@ public class Server_Main implements Runnable
 			System.out.println("Main Loader: Loading Server_Main ...");
 			Server_Main server = new Server_Main(1111);
 			
+			// Assign lower priority to Main thread (Checking shutdown request only)
+			Thread.currentThread().setPriority(Thread.MIN_PRIORITY);
 			// Wait for CMD input for shutting down (Press Enter Key)
 			InputStreamReader isr = new InputStreamReader(System.in);
 			BufferedReader keyboard = new BufferedReader(isr);
 			keyboard.readLine();
-			System.out.println("Main Loader: is Shutdown Normally: " + server.threadPoolShutdown(1));
+			System.out.println("Main Loader: is Shutdown Normally: " + server.threadPoolShutdown(1)); // Wait for 1 second in shutdown
 		}
 		catch(Exception e)
 		{
