@@ -1,5 +1,6 @@
 package my.chatroom.server.database_admin;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
@@ -11,8 +12,7 @@ public class CreateMSGSTable
 	{
 		Class.forName("com.ibm.db2j.jdbc.DB2jDriver");
 		System.out.println("Driver loaded");
-		Connection conn = DriverManager.getConnection(
-				"jdbc:db2j://Users//hjl//Documents//eclipse-workspace//ChatRoom-Server//database//QuoteDB");
+		Connection conn = DriverManager.getConnection("jdbc:db2j:" + new File("").getAbsolutePath().concat("/database/QuoteDB"));
 		System.out.println("Connection made to Data Base");
 
 		Statement statement = conn.createStatement();
