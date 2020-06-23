@@ -154,6 +154,10 @@ public class Server_Main implements Runnable
 	}
 	
 // shutdownCleanup()
+	/**
+	 * Wrap up right before normal server shutdown invoked by calling {@code serverShutdown(int waitTime)}.
+	 * @return {@code true} if wrap up is successful
+	 */
 	private boolean shutdownCleanup()
 	{
 		return dbServer.saveAllMessages();
