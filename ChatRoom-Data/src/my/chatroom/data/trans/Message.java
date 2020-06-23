@@ -1,6 +1,7 @@
 package my.chatroom.data.trans;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.HashMap;
 
 /**
@@ -69,6 +70,16 @@ public class Message implements Serializable
 		this.time = System.currentTimeMillis() / 1000L;
 		this.msgType = msgType;
 	}
+	
+	// De-serialize
+	public Message(String data, int sender_id, int[] recipients, MsgType msgType, long time)
+	{
+		this.msg = data;
+		this.user_id = sender_id;
+		this.recipients = recipients;
+		this.time = time;
+		this.msgType = msgType;
+	}
 
 	public String getMsg()
 	{
@@ -108,7 +119,7 @@ public class Message implements Serializable
 	@Override
 	public String toString()
 	{
-		return msg + " " + user_id + " " + time + " " + msgType + " " + recipients + onlineUsers + offlineUsers;
+		return msg + " " + user_id + " " + time + " " + msgType + " " + Arrays.toString(recipients) + onlineUsers + offlineUsers;
 	}
 
 }
