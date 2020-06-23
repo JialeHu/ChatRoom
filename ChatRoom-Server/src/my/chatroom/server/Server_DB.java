@@ -7,9 +7,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
+import my.chatroom.data.json.JSON_Utility;
 import my.chatroom.data.server.*;
+import my.chatroom.data.trans.Message;
 import my.chatroom.server.exception.FatalDataBaseException;
 
 /**
@@ -24,14 +27,21 @@ public class Server_DB
 {
 
 // Instance Variables
-	private Connection connection;
-	private PreparedStatement insertStatement;
-	private PreparedStatement updateNickNameStatement;
-	private PreparedStatement updatePasswordStatement;
-	private PreparedStatement deleteStatement;
-	private Statement selectAllStatement;
+	private final Connection connection;
 	
-	private ConcurrentHashMap<Integer, User> usersMap = new ConcurrentHashMap<Integer, User>();
+	private PreparedStatement insertStmtUSERS;
+	private PreparedStatement updateNickNameStmtUSERS;
+	private PreparedStatement updatePasswordStmtUSERS;
+	private PreparedStatement deleteStmtUSERS;
+	
+	private PreparedStatement insertStmtMSGS;
+	private PreparedStatement deleteStmtMSGS;
+	private PreparedStatement deleteAllStmtMSGS;
+	
+	private Statement selectAllStmt;
+	
+	private final ConcurrentHashMap<Integer, User> usersMap;
+	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages;
 	
 // Constructor
 	public Server_DB() throws FatalDataBaseException
@@ -58,23 +68,29 @@ public class Server_DB
 		System.out.println("Server_DB: Preparing SQL Statements ...");
 		try
 		{
-			insertStatement = connection.prepareStatement("INSERT INTO USERS (USER_ID, NICK_NAME, PASSWORD) VALUES (?,?,?)");
-			updateNickNameStatement = connection.prepareStatement("UPDATE USERS SET NICK_NAME = ? WHERE USER_ID = ?");
-			updatePasswordStatement = connection.prepareStatement("UPDATE USERS SET PASSWORD = ? WHERE USER_ID = ?");
-			deleteStatement = connection.prepareStatement("DELETE FROM USERS WHERE USER_ID = ?");
-			selectAllStatement = connection.createStatement();
+			insertStmtUSERS = connection.prepareStatement("INSERT INTO USERS (USER_ID, NICK_NAME, PASSWORD) VALUES (?,?,?)");
+			updateNickNameStmtUSERS = connection.prepareStatement("UPDATE USERS SET NICK_NAME = ? WHERE USER_ID = ?");
+			updatePasswordStmtUSERS = connection.prepareStatement("UPDATE USERS SET PASSWORD = ? WHERE USER_ID = ?");
+			deleteStmtUSERS = connection.prepareStatement("DELETE FROM USERS WHERE USER_ID = ?");
+			
+			insertStmtMSGS = connection.prepareStatement("INSERT INTO MSGS (USER_ID, MSG_Q) VALUES (?,?)");
+			deleteStmtMSGS = connection.prepareStatement("DELETE FROM MSGS WHERE USER_ID = ?");
+			deleteAllStmtMSGS = connection.prepareStatement("DELETE FROM MSGS");
+			
+			selectAllStmt = connection.createStatement();
 			
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to prepare SQL statements. " + e.getMessage());
-			return;
+			throw new FatalDataBaseException("Failed to prepare SQL statements");
 		}
 		
 		// Retrieve users from DB
 		System.out.println("Server_DB: Loading Users from DB ...");
+		usersMap = new ConcurrentHashMap<Integer, User>();
 		try
 		{
-			ResultSet rs = selectAllStatement.executeQuery("SELECT * FROM USERS");
+			ResultSet rs = selectAllStmt.executeQuery("SELECT * FROM USERS");
 			while (rs.next())
 			{
 				int user_id = rs.getInt("USER_ID");
@@ -86,18 +102,104 @@ public class Server_DB
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to retrieve data from DB. " + e.getMessage());
-			return;
+			throw new FatalDataBaseException("Failed to retrieve data from DB");
 		} catch (Exception e)
 		{
 			System.err.println("Server_DB: - Failed to load user. " + e.getMessage());
-			return;
+			throw new FatalDataBaseException("Failed to load user");
 		}
-		
 		System.out.println("Server_DB: Users Successful Loaded: [ID]");
 		System.out.println(usersMap.keySet());
-		System.out.println("Server_DB: Server_DB is Up");
+		
+		// Retrieve savedMessages from DB
+		System.out.println("Server_DB: Loading Messages from DB ...");
+		savedMessages = new ConcurrentHashMap<Integer, Queue<Message>>();
+		try
+		{
+			ResultSet rs = selectAllStmt.executeQuery("SELECT * FROM MSGS");
+			while (rs.next())
+			{
+				int user_id = rs.getInt("USER_ID");
+				String msgs = rs.getString("MSG_Q");
+				Queue<Message> queue = JSON_Utility.decodeMSGs(msgs);
+				savedMessages.put(user_id, queue);
+			}
+		} catch (SQLException e)
+		{
+			System.err.println("Server_DB: - Failed to retrieve savedMessages from DB. " + e.getMessage());
+			throw new FatalDataBaseException("Failed to retrieve savedMessages from DB");
+		} catch (Exception e)
+		{
+			System.err.println("Server_DB: - Failed to load message. " + e.getMessage());
+			throw new FatalDataBaseException("Failed to load message");
+		}
+		System.out.println("Server_DB: Saved Messages Successful Loaded: {ID=[MSGS]}");
+		System.out.println(savedMessages);
 		
 		System.out.println("-----Server_DB Loaded-----\n");
+	}
+	
+// Get Pointer of savedMessages
+	public ConcurrentHashMap<Integer, Queue<Message>> getSavedMessages()
+	{
+		return savedMessages;
+	}
+	
+// Save All savedMessages
+	public boolean saveAllMessages()
+	{
+		System.out.println("Server_DB: Saving all savedMessages ... (With Delete First)");
+		if (!deleteAllMessages()) return false;
+			
+		for (int user_id : savedMessages.keySet())
+		{
+			// Queue to JSON string
+			String msgs = JSON_Utility.encodeMSGs(savedMessages.get(user_id));
+			try
+			{
+				insertStmtMSGS.setInt(1, user_id);
+				insertStmtMSGS.setString(2, msgs);
+				insertStmtMSGS.executeUpdate();
+			} catch (SQLException e)
+			{
+				System.err.println("Server_DB: - Failed to save savedMessages to DB for " + user_id + e.getMessage());
+				return false;
+			}
+		}
+		System.out.println("Server_DB: All savedMessages saved to DB");
+		return true;
+	}
+	
+// Delete All savedMessages
+	private boolean deleteAllMessages()
+	{
+		System.out.println("Server_DB: Deleting all savedMessages ...");
+		try
+		{
+			deleteAllStmtMSGS.execute();
+		} catch (SQLException e)
+		{
+			System.err.println("Server_DB: - Failed to delete all savedMessages from DB " + e.getMessage());
+			return false;
+		}
+		System.out.println("Server_DB: All savedMessages deleted froms DB");
+		return true;
+	}
+	
+// Delete savedMessages for a User
+	public boolean deleteMessages(int user_id)
+	{
+		try
+		{
+			deleteStmtMSGS.setInt(1, user_id);
+			deleteStmtMSGS.executeUpdate();
+		} catch (SQLException e)
+		{
+			System.err.println("Server_DB: - Failed to delete savedMessages from DB for " + user_id + e.getMessage());
+			return false;
+		}
+		System.out.println("Server_DB: savedMessages deleted froms DB for " + user_id);
+		return true;
 	}
 	
 // Get All IDs
@@ -129,14 +231,14 @@ public class Server_DB
 	}
 	
 // Add User
-	public boolean addUser(User user)
+	public synchronized boolean addUser(User user)
 	{
 		try
 		{
-			insertStatement.setInt(1, user.getUser_id());
-			insertStatement.setString(2, user.getNick_name());
-			insertStatement.setString(3, user.getPassword());
-			insertStatement.executeUpdate();
+			insertStmtUSERS.setInt(1, user.getUser_id());
+			insertStmtUSERS.setString(2, user.getNick_name());
+			insertStmtUSERS.setString(3, user.getPassword());
+			insertStmtUSERS.executeUpdate();
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to add user to DB. " + user + e.getMessage());
@@ -149,13 +251,13 @@ public class Server_DB
 	}
 
 // Remove User
-	public boolean removeUser(int user_id)
+	public synchronized boolean removeUser(int user_id)
 	{
 		User user = usersMap.get(user_id);
 		try
 		{
-			deleteStatement.setInt(1, user_id);
-			deleteStatement.executeUpdate();
+			deleteStmtUSERS.setInt(1, user_id);
+			deleteStmtUSERS.executeUpdate();
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to remove user from DB. " + user + e.getMessage());
@@ -178,9 +280,9 @@ public class Server_DB
 		user.setNick_name(newName);
 		try
 		{
-			updateNickNameStatement.setString(1, user.getNick_name());
-			updateNickNameStatement.setInt(2, user_id);
-			updateNickNameStatement.executeUpdate();
+			updateNickNameStmtUSERS.setString(1, user.getNick_name());
+			updateNickNameStmtUSERS.setInt(2, user_id);
+			updateNickNameStmtUSERS.executeUpdate();
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to update user nick_name to DB. " + user + e.getMessage());
@@ -210,9 +312,9 @@ public class Server_DB
 		user.setPassword(oldPassword, newPassword);
 		try
 		{
-			updatePasswordStatement.setString(1, user.getPassword());
-			updatePasswordStatement.setInt(2, user_id);
-			updatePasswordStatement.executeUpdate();
+			updatePasswordStmtUSERS.setString(1, user.getPassword());
+			updatePasswordStmtUSERS.setInt(2, user_id);
+			updatePasswordStmtUSERS.executeUpdate();
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to update password to DB. " + user + e.getMessage());

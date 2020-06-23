@@ -18,8 +18,7 @@ public class CreateMSGSTable
 		Statement statement = conn.createStatement();
 		statement.execute("CREATE TABLE MSGS "
 				+ "(USER_ID    	INTEGER    	 NOT NULL,"
-				+ " MSG_STR     VARCHAR(256) NOT NULL,"
-				+ " TIME        BIGINT    	 NOT NULL,"
+				+ " MSG_Q       VARCHAR(256) NOT NULL,"
 				+ " PRIMARY KEY (USER_ID))");
 		System.out.println("MSGS table built");
 	}

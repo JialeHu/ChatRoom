@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,9 +44,9 @@ public class Server_Main implements Runnable
 	private final ExecutorService threadPool;
 	
 	// Data
-	private final LinkedList<Integer> offlineUsers;
-	private final ConcurrentHashMap<Integer, ObjectOutputStream> onlineUsers = new ConcurrentHashMap<Integer, ObjectOutputStream>();
-	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages;
+	private final ArrayList<Integer> offlineUsers; // [user_id]
+	private final ConcurrentHashMap<Integer, ObjectOutputStream> onlineUsers; // {user_id=oos}
+	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages; // {recipient=[messages]}
 	
 // Constructor
 	/**
@@ -55,24 +56,21 @@ public class Server_Main implements Runnable
 	 */
 	public Server_Main(int socketPort) throws FatalDataBaseException
 	{
-		// Load DB Server
+		// Load Server_DB
 		System.out.println("Server_Main: Loading Server_DB ...");
 		this.dbServer = new Server_DB();
 		
-		// Update Users Lists
+		// Load Users Lists from DB
 		System.out.println("Server_Main: Loading Users ...");
-		offlineUsers = new LinkedList<Integer>(Arrays.asList(dbServer.getIDs()));
+		onlineUsers = new ConcurrentHashMap<Integer, ObjectOutputStream>();
+		offlineUsers = new ArrayList<Integer>(Arrays.asList(dbServer.getIDs()));
 		System.out.println("Server_Main: Offline & Online Users: [ID]");
 		System.out.println(offlineUsers);
 		System.out.println(onlineUsers.keySet());
 		
-		// Update Saved Messages
-		System.out.println("Server_Main: Loading Saved Messages ... (UNIMPLEMENTED, loading new one)");
-		savedMessages = new ConcurrentHashMap<Integer, Queue<Message>>();
-		for (int id : offlineUsers)
-		{
-			savedMessages.put(id, (Queue<Message>) new LinkedList<Message>());
-		}
+		// Load Saved Messages from DB
+		System.out.println("Server_Main: Loading Saved Messages ...");
+		savedMessages = dbServer.getSavedMessages(); // Pointed to savedMessages in Server_DB
 		System.out.println("Server_Main: Saved Messages for Each User: {ID=[MsgQueue]}");
 		System.out.println(savedMessages);
 		
@@ -80,7 +78,7 @@ public class Server_Main implements Runnable
 		try 
 		{
 			ss = new ServerSocket(socketPort);
-			System.out.println("Server_Main: Server_Main is up at " 
+			System.out.println("Server_Main: ServerSocket is set at " 
 					+ InetAddress.getLocalHost().getHostAddress() 
 					+ " on port " + ss.getLocalPort());
 		} 
@@ -121,6 +119,7 @@ public class Server_Main implements Runnable
 		// Normal Shutdown
 		System.out.println("Server_Main: Shutting Down with Waiting Time of: " + waitTime + " seconds");
 		threadPool.shutdown(); // Disable new tasks from being submitted
+		// Cut all connected sessions
 		try
 		{
 			ss.close(); // Stop ServerSocket
@@ -129,7 +128,10 @@ public class Server_Main implements Runnable
 			e.printStackTrace();
 			return false;
 		}
-		// Wait for terminations
+		// Cleanup before shutdown (Blocking)
+		System.out.println("Server_Main: Cleaning Up ...");
+		if (!shutdownCleanup()) return false;
+		// Wait for thread terminations
 		List<Runnable> taskList = null;
 		try {
 			// Wait for existing tasks to terminate
@@ -149,6 +151,12 @@ public class Server_Main implements Runnable
 		System.out.print("Server_Main: Halted Tasks: ");
 		System.out.println(taskList);
 		return true;
+	}
+	
+// shutdownCleanup()
+	private boolean shutdownCleanup()
+	{
+		return dbServer.saveAllMessages();
 	}
 
 // run()
@@ -229,7 +237,8 @@ public class Server_Main implements Runnable
 				case ADD_USER:
 					if (user_id != 0)
 					{
-						System.out.println("Server_Main: - Wrong first message enum type: ADD_USER from " + clientAddress + " Session terminated");
+						System.out.println("Server_Main: - Wrong first message enum type: ADD_USER from " 
+											+ clientAddress + " Session terminated");
 						return;
 					}
 					String msg = ((Message) joinMsg).getMsg();
