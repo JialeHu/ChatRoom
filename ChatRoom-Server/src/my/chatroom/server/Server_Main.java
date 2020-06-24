@@ -155,7 +155,7 @@ public class Server_Main implements Runnable
 	
 // shutdownCleanup()
 	/**
-	 * Wrap up right before normal server shutdown invoked by calling {@code serverShutdown(int waitTime)}.
+	 * Wraps up right before normal server shutdown invoked by calling {@code serverShutdown(int waitTime)}.
 	 * @return {@code true} if wrap up is successful
 	 */
 	private boolean shutdownCleanup()
@@ -488,6 +488,7 @@ public class Server_Main implements Runnable
 				case RM_USER:
 					if (dbServer.removeUser(user_id))
 					{
+						savedMessages.remove(user_id);
 						oos.writeObject(new Message(MsgType.DONE));
 						oos.close();
 						return;

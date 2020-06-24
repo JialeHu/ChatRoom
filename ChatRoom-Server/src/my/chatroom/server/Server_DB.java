@@ -16,11 +16,11 @@ import my.chatroom.data.trans.Message;
 import my.chatroom.server.exception.FatalDataBaseException;
 
 /**
+ * Database server interfacing with DB2 from IBM, providing API for main Server program.
  * 
  * @author Jiale Hu
  * @version 1.0
  * @since 05/05/2020
- *
  */
 
 public class Server_DB
@@ -44,6 +44,10 @@ public class Server_DB
 	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages;
 	
 // Constructor
+	/**
+	 * Constructs database server, loads DB driver, connects to DB, retrieves users data and messages data.
+	 * @throws FatalDataBaseException if error occurs when loading DB and retrieving initial data.
+	 */
 	public Server_DB() throws FatalDataBaseException
 	{
 		System.out.println("Server_DB: Initializing Server_DB ...");
@@ -140,12 +144,20 @@ public class Server_DB
 	}
 	
 // Get Pointer of savedMessages
+	/**
+	 * Get {@code Message}s to be sent from DB as a {@code ConcurrentHashMap<Integer, Queue<Message>>}
+	 * @return {@code ConcurrentHashMap<Integer, Queue<Message>>}: recipients ID, message queues
+	 */
 	public ConcurrentHashMap<Integer, Queue<Message>> getSavedMessages()
 	{
 		return savedMessages;
 	}
 	
 // Save All savedMessages
+	/**
+	 * Save all {@code Message} from memory to DB via JSON serialization.
+	 * @return {@code true} if saved successfully
+	 */
 	public boolean saveAllMessages()
 	{
 		System.out.println("Server_DB: Saving all savedMessages ... (With Delete First)");
@@ -171,6 +183,10 @@ public class Server_DB
 	}
 	
 // Delete All savedMessages
+	/**
+	 * Delete all {@code Message} saved on DB.
+	 * @return {@code true} if deleted successfully
+	 */
 	private boolean deleteAllMessages()
 	{
 		System.out.println("Server_DB: Deleting all savedMessages ...");
@@ -187,6 +203,11 @@ public class Server_DB
 	}
 	
 // Delete savedMessages for a User
+	/**
+	 * Delete {@code Message} for a user saved on DB.
+	 * @param user_id recipient user ID of the {@code Message} to be deleted
+	 * @return {@code true} if deleted successfully
+	 */
 	public boolean deleteMessages(int user_id)
 	{
 		try
@@ -203,6 +224,10 @@ public class Server_DB
 	}
 	
 // Get All IDs
+	/**
+	 * Get all user IDs from DB.
+	 * @return {@code Integer[]} of user IDs
+	 */
 	public Integer[] getIDs()
 	{
 		return usersMap.keySet().toArray(new Integer[0]);
@@ -214,23 +239,43 @@ public class Server_DB
 //		return usersMap.get(user_id);
 //	}
 	
+	/**
+	 * Get nick name of a user.
+	 * @param user_id user ID of the nick name to be found
+	 * @return nick name as {@code String}
+	 */
 	public String getNickName(int user_id)
 	{
 		return usersMap.get(user_id).getNick_name();
 	}
 	
+	/**
+	 * Get general information of a user.
+	 * @param user_id user ID of the information to be found
+	 * @return user information as {@code String}
+	 */
 	public String getUserInfo(int user_id)
 	{
 		return usersMap.get(user_id).toString();
 	}
 
 // Check User
+	/**
+	 * Check if a user exists on DB.
+	 * @param user_id user ID to be check
+	 * @return {@code true} if the user exists
+	 */
 	public boolean isExist(int user_id)
 	{
 		return usersMap.containsKey(user_id);
 	}
 	
 // Add User
+	/**
+	 * Add a new user to DB.
+	 * @param user {@code User} to be added
+	 * @return {@code true} if added successfully
+	 */
 	public synchronized boolean addUser(User user)
 	{
 		try
@@ -251,6 +296,11 @@ public class Server_DB
 	}
 
 // Remove User
+	/**
+	 * Remove an existing user from DB.
+	 * @param user_id user ID of the user to be removed
+	 * @return {@code true} if removed successfully 
+	 */
 	public synchronized boolean removeUser(int user_id)
 	{
 		User user = usersMap.get(user_id);
@@ -269,7 +319,13 @@ public class Server_DB
 	}
 	
 // Set Nick Name
-	public boolean setNickName(int user_id, String newName)
+	/**
+	 * Set nick name for a user.
+	 * @param user_id user ID of user to be set
+	 * @param newName new nick name
+	 * @return {@code true} if set successfully
+	 */
+	public synchronized boolean setNickName(int user_id, String newName)
 	{
 		User user = usersMap.get(user_id);
 		if (newName.equals(usersMap.get(user_id).getNick_name()))
@@ -294,6 +350,12 @@ public class Server_DB
 	}
 
 // Check Password
+	/**
+	 * Check password of a user.
+	 * @param user_id user ID to be checked
+	 * @param password password to be checked
+	 * @return {@code true} if password is correct
+	 */
 	public boolean checkPassword(int user_id, String password)
 	{
 		User user = usersMap.get(user_id);
@@ -301,7 +363,14 @@ public class Server_DB
 	}
 
 // Set Password
-	public boolean setPassword(int user_id, String oldPassword, String newPassword)
+	/**
+	 * Set new password for a user.
+	 * @param user_id user ID to be set
+	 * @param oldPassword old password of the user
+	 * @param newPassword new password to be set
+	 * @return {@code true} if set successfully
+	 */
+	public synchronized boolean setPassword(int user_id, String oldPassword, String newPassword)
 	{
 		User user = usersMap.get(user_id);
 		if (!user.checkPassword(oldPassword))

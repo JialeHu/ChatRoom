@@ -125,11 +125,11 @@ public final class Client_Main implements ClientInterface, ActionListener
 		
 		
 		
-		
+		settingsButton.addActionListener(this);
 		// Build Setting Window
-		settingsWindow.setSize(300, mainWindow.getSize().height);
-		settingsWindow.setLocation(mainWindow.getLocation().x - settingsWindow.getSize().width, mainWindow.getLocation().y);
-		settingsWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//		settingsWindow.setSize(300, mainWindow.getSize().height);
+//		settingsWindow.setLocation(mainWindow.getLocation().x - settingsWindow.getSize().width, mainWindow.getLocation().y);
+//		settingsWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		
 		System.out.println("Windows are set");
 	}
@@ -192,7 +192,7 @@ public final class Client_Main implements ClientInterface, ActionListener
 	{
 		if (ae.getSource() == settingsButton)
 		{
-			
+			new Client_Settings(ois, oos, dim);
 		}
 		
 	}
