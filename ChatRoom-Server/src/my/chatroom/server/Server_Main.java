@@ -46,6 +46,7 @@ public class Server_Main implements Runnable
 	// Data
 	private final ArrayList<Integer> offlineUsers; // [user_id]
 	private final ConcurrentHashMap<Integer, ObjectOutputStream> onlineUsers; // {user_id=oos}
+	private final ArrayList<ObjectInputStream> onlineOIS; // For closing connection before server shutdown
 	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages; // {recipient=[messages]}
 	
 // Constructor
@@ -62,6 +63,7 @@ public class Server_Main implements Runnable
 		
 		// Load Users Lists from DB
 		System.out.println("Server_Main: Loading Users ...");
+		onlineOIS = new ArrayList<ObjectInputStream>();
 		onlineUsers = new ConcurrentHashMap<Integer, ObjectOutputStream>();
 		offlineUsers = new ArrayList<Integer>(Arrays.asList(dbServer.getIDs()));
 		System.out.println("Server_Main: Offline & Online Users: [ID]");
@@ -122,7 +124,10 @@ public class Server_Main implements Runnable
 		// Cut all connected sessions
 		try
 		{
-			ss.close(); // Stop ServerSocket
+			// Stop all ois
+			for (ObjectInputStream ois : onlineOIS) ois.close();
+			// Stop ServerSocket
+			ss.close();
 		} catch (IOException e)
 		{
 			e.printStackTrace();
@@ -209,6 +214,7 @@ public class Server_Main implements Runnable
 		}
 		
 		// Joining
+		onlineOIS.add(ois);
 		try
 		{
 			// Keep check join message until joined or added
@@ -230,6 +236,7 @@ public class Server_Main implements Runnable
 							System.out.println("Server_Main: Connection Terminated: " + e.toString());
 							// Leaving
 							leave(user_id, oos);
+							onlineOIS.remove(ois);
 							return;
 							// Session terminated
 						}
@@ -311,10 +318,12 @@ public class Server_Main implements Runnable
 			}
 		} catch (MessageTypeException e)
 		{
+			onlineOIS.remove(ois);
 			System.out.println("Server_Main: - Wrong message type from " + clientAddress + " Session terminated");
 			return;
 		} catch (Exception e)
 		{
+			onlineOIS.remove(ois);
 			System.out.println("Server_Main: - Join failed from " + clientAddress + " " + e.toString());
 			e.printStackTrace();
 			return;
@@ -373,6 +382,7 @@ public class Server_Main implements Runnable
 				{
 					pre_oos.writeObject(new Message(MsgType.REFUSE));
 					pre_oos.close();
+					oos.writeObject(new Message(MsgType.DONE));
 				} catch (IOException e)
 				{
 					e.printStackTrace();
