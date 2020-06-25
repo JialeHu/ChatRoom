@@ -26,5 +26,6 @@ public enum MsgType
 	// From Server
 	USER_LIST,
 	REFUSE,
-	DONE
+	DONE,
+	LOGOUT
 }

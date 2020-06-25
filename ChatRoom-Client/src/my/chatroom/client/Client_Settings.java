@@ -44,6 +44,7 @@ public class Client_Settings implements ActionListener
 		resetPanel.setBackground(Color.DARK_GRAY);
 		
 		infoTextArea.setBackground(Color.LIGHT_GRAY);
+		infoTextArea.setEditable(false);
 		
 		nickNameTextField.setBackground(Color.LIGHT_GRAY);
 		newPw1Field.setBackground(Color.LIGHT_GRAY);

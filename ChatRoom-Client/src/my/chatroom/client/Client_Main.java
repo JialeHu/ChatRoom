@@ -102,19 +102,30 @@ public final class Client_Main implements ActionListener, Runnable
 //		userListPanel.add(onlineList);
 //		userListPanel.add(offlineList);
 		
+		onlineList.setLayoutOrientation(JList.VERTICAL);
+		onlineList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
+		
 		chatPanel.setBackground(Color.LIGHT_GRAY);
 		
 		leftPanel.add(settingsButton, "North");
 		leftPanel.add(clearButton, "North");
 		
 		JPanel listPanel = new JPanel();
-		listPanel.setLayout(new GridLayout(2, 1));
+		JLabel onlineLabel = new JLabel("Online Users:");
+		JLabel offlineLabel = new JLabel("Offline Users:");
+		listPanel.setLayout(new GridLayout(4, 1));
 		leftPanel.add(listPanel, "Center");
+		listPanel.add(onlineLabel);
 		listPanel.add(onlineList);
+		listPanel.add(offlineLabel);
 		listPanel.add(offlineList);
-		leftPanel.setBackground(Color.DARK_GRAY);
-		onlineList.setBackground(Color.DARK_GRAY);
-		offlineList.setBackground(Color.DARK_GRAY);
+		leftPanel.setBackground(Color.GRAY);
+		onlineLabel.setBackground(Color.GRAY);
+		onlineLabel.setOpaque(true);
+		offlineLabel.setBackground(Color.GRAY);
+		offlineLabel.setOpaque(true);
+		onlineList.setBackground(Color.GRAY);
+		offlineList.setBackground(Color.GRAY);
 		onlineList.setFont(new Font("default", Font.PLAIN, 20));
 		offlineList.setFont(new Font("default", Font.PLAIN, 20));
 		
@@ -234,6 +245,10 @@ public final class Client_Main implements ActionListener, Runnable
 		if (ae.getSource() == settingsButton)
 		{
 			new Client_Settings(this, dim);
+		} else if (ae.getSource() == clearButton)
+		{
+			onlineList.clearSelection();
+			offlineList.clearSelection();
 		}
 		
 	}
@@ -281,6 +296,9 @@ public final class Client_Main implements ActionListener, Runnable
 				{
 					new Client_Error(dim, e.toString());
 				}
+				break;
+			case LOGOUT:
+				System.out.println("LOG OUT by Server: " + msg.getMsg());
 				break;
 			default:
 				new Client_Error(dim, msg.toString());

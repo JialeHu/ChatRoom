@@ -378,9 +378,10 @@ public class Server_Main implements Runnable
 			{
 				// Close previous oos
 				ObjectOutputStream pre_oos = onlineUsers.get(user_id);
+				onlineUsers.replace(user_id, oos);
 				try
 				{
-					pre_oos.writeObject(new Message(MsgType.REFUSE, null));
+					pre_oos.writeObject(new Message(MsgType.LOGOUT, "ReJoin"));
 					pre_oos.close();
 					oos.writeObject(new Message(MsgType.DONE, dbServer.getNickName(user_id)));
 				} catch (IOException e)
@@ -388,7 +389,6 @@ public class Server_Main implements Runnable
 					e.printStackTrace();
 				}
 				// Update this oos
-				onlineUsers.replace(user_id, oos);
 				sendUserList();
 				System.out.println("Server_Main: Re-Join succeed: " + user_id);
 			}
@@ -444,6 +444,7 @@ public class Server_Main implements Runnable
 		}
 		
 		// Send Saved Messages when client is offline
+		if (!savedMessages.containsKey(user_id)) savedMessages.put(user_id, (Queue<Message>) new LinkedList<Message>());
 		Queue<Message> queue = savedMessages.get(user_id);
 		if (queue == null) System.err.println("Server_Main: - Saved Msg Queue Unfound for: " + user_id);
 		while (!queue.isEmpty())
@@ -592,6 +593,7 @@ public class Server_Main implements Runnable
 			{
 				int user_id = user.getUser_id();
 				savedMessages.put(user_id, (Queue<Message>) new LinkedList<Message>());
+				dbServer.saveAllMessages();
 				return user_id;
 			}
 		} catch(Exception e)
