@@ -1,5 +1,6 @@
 package my.chatroom.client;
 
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -18,7 +19,7 @@ import my.chatroom.data.trans.*;
 public final class Client_Login implements ActionListener
 {
 // Instance Variables
-	private ClientInterface caller;
+	private Client_Main mainClient;
 	private Dimension dim;
 	private Socket s;
 	private ObjectOutputStream oos;
@@ -48,9 +49,9 @@ public final class Client_Login implements ActionListener
 	private int user_id;
 	private String password;
 	
-	public Client_Login(ClientInterface caller, Dimension dim, String serverAddress, int serverPort)
+	public Client_Login(Client_Main mainClient, Dimension dim, String serverAddress, int serverPort)
 	{
-		this.caller = caller;
+		this.mainClient = mainClient;
 		this.dim = dim;
 		// Connect to Server
 		try
@@ -111,6 +112,7 @@ public final class Client_Login implements ActionListener
 			
 			System.out.println(user_id + " " + password);
 			
+			String nickName;
 			Message joinMsg = new Message(password, user_id, MsgType.JOIN);
 			try
 			{
@@ -124,6 +126,7 @@ public final class Client_Login implements ActionListener
 					{
 					case DONE:
 						System.out.println("Log In Succeeded");
+						nickName = ((Message) reply).getMsg();
 						break;
 					case REFUSE:
 						new Client_Error(dim, "Invalid User ID or Password");
@@ -144,7 +147,7 @@ public final class Client_Login implements ActionListener
 			}
 			
 			// Wake Up Caller
-			caller.loggedIn(s, oos, ois, user_id);
+			mainClient.loggedIn(s, oos, ois, user_id, nickName);
 			// Close Self
 			loginWindow.dispatchEvent(new WindowEvent(loginWindow, WindowEvent.WINDOW_CLOSING));
 			

@@ -19,6 +19,7 @@ public class CreateUSERSTable
 		Statement statement = conn.createStatement();
 		statement.execute("CREATE TABLE USERS "
 				+ "(USER_ID     INTEGER     NOT NULL,"
+				+ " TIME        BIGINT      NOT NULL,"
 				+ " NICK_NAME   VARCHAR(50) NOT NULL,"
 				+ " PASSWORD    VARCHAR(50) NOT NULL,"
 				+ " PRIMARY KEY (USER_ID))");

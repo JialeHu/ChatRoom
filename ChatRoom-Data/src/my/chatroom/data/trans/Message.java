@@ -36,7 +36,7 @@ public class Message implements Serializable
 		this.msg = msg;
 		this.user_id = sender_id;
 		this.recipients = recipients;
-		this.time = System.currentTimeMillis() / 1000L;
+		this.time = System.currentTimeMillis();
 	}
 	
 	// For Non-chat
@@ -45,7 +45,7 @@ public class Message implements Serializable
 		this.msg = data;
 		this.user_id = user_id;
 		this.recipients = null;
-		this.time = System.currentTimeMillis() / 1000L;
+		this.time = System.currentTimeMillis();
 		this.msgType = msgType;
 	}
 	
@@ -55,19 +55,19 @@ public class Message implements Serializable
 		this.msg = null;
 		this.user_id = 0;
 		this.recipients = null;
-		this.time = System.currentTimeMillis() / 1000L;
+		this.time = System.currentTimeMillis();
 		this.onlineUsers = onlineUsers;
 		this.offlineUsers = offlineUsers;
 		this.msgType = MsgType.USER_LIST;
 	}
 	
 	// Server Reply
-	public Message(MsgType msgType)
+	public Message(MsgType msgType, String data)
 	{
-		this.msg = null;
+		this.msg = data;
 		this.user_id = 0;
 		this.recipients = null;
-		this.time = System.currentTimeMillis() / 1000L;
+		this.time = System.currentTimeMillis();
 		this.msgType = msgType;
 	}
 	

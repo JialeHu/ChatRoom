@@ -24,9 +24,9 @@ public class User implements Serializable
 	private static final long serialVersionUID = 1L;
 	
 // Static
-	public static User restoreFromDB(int user_id, String nick_name, String password) throws Exception
+	public static User restoreFromDB(int user_id, long time, String nick_name, String password) throws Exception
 	{
-		return new User(user_id, nick_name, password);
+		return new User(user_id, time, nick_name, password);
 	}
 	
 	private static int lastID; // 0 if not yet initialized from disk
@@ -49,6 +49,7 @@ public class User implements Serializable
 	
 // Instance Variables
 	private final int user_id;
+	private final long signUpTime;
 	private String nick_name;
 	private transient String password;
 	
@@ -56,6 +57,7 @@ public class User implements Serializable
 	protected User() throws FileNotFoundException, ClassNotFoundException, IOException
 	{
 		this.user_id = User.getNextID();
+		this.signUpTime = System.currentTimeMillis();
 	}
 	
 	public User(String nick_name, String password) throws Exception
@@ -66,9 +68,10 @@ public class User implements Serializable
 	}
 	
 	// For recovery from DB
-	private User(int user_id, String nick_name, String password) throws Exception
+	private User(int user_id, long time, String nick_name, String password) throws Exception
 	{
 		this.user_id = user_id;
+		this.signUpTime = time;
 		this.nick_name = nick_name;
 		this.password = password;
 	}
@@ -88,6 +91,12 @@ public class User implements Serializable
 	public final int getUser_id()
 	{
 		return user_id;
+	}
+	
+// Signup time
+	public final long getSignUpTime()
+	{
+		return signUpTime;
 	}
 	
 // password

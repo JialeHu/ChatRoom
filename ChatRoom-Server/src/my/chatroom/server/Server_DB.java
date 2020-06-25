@@ -7,6 +7,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Date;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -72,7 +73,7 @@ public class Server_DB
 		System.out.println("Server_DB: Preparing SQL Statements ...");
 		try
 		{
-			insertStmtUSERS = connection.prepareStatement("INSERT INTO USERS (USER_ID, NICK_NAME, PASSWORD) VALUES (?,?,?)");
+			insertStmtUSERS = connection.prepareStatement("INSERT INTO USERS (USER_ID, TIME, NICK_NAME, PASSWORD) VALUES (?,?,?,?)");
 			updateNickNameStmtUSERS = connection.prepareStatement("UPDATE USERS SET NICK_NAME = ? WHERE USER_ID = ?");
 			updatePasswordStmtUSERS = connection.prepareStatement("UPDATE USERS SET PASSWORD = ? WHERE USER_ID = ?");
 			deleteStmtUSERS = connection.prepareStatement("DELETE FROM USERS WHERE USER_ID = ?");
@@ -98,9 +99,10 @@ public class Server_DB
 			while (rs.next())
 			{
 				int user_id = rs.getInt("USER_ID");
+				long time = rs.getLong("TIME");
 				String nick_name = rs.getString("NICK_NAME");
 				String password = rs.getString("PASSWORD");
-				User user = User.restoreFromDB(user_id, nick_name, password);
+				User user = User.restoreFromDB(user_id, time, nick_name, password);
 				usersMap.put(user_id, user);
 			}
 		} catch (SQLException e)
@@ -139,6 +141,11 @@ public class Server_DB
 		}
 		System.out.println("Server_DB: Saved Messages Successful Loaded: {ID=[MSGS]}");
 		System.out.println(savedMessages);
+		
+		if (!usersMap.keySet().equals(savedMessages.keySet())) 
+		{
+			System.err.println("Server_DB: - Users Data Does Not Match Messages Users Data.");
+		}
 		
 		System.out.println("-----Server_DB Loaded-----\n");
 	}
@@ -256,7 +263,9 @@ public class Server_DB
 	 */
 	public String getUserInfo(int user_id)
 	{
-		return usersMap.get(user_id).toString();
+		User user = usersMap.get(user_id);
+		if (user == null) return "No Such User Found in DB.";
+		return "User ID: " + user_id + " Nick Name: " + user.getNick_name() + " User Since: " + new Date(user.getSignUpTime());
 	}
 
 // Check User
@@ -281,8 +290,9 @@ public class Server_DB
 		try
 		{
 			insertStmtUSERS.setInt(1, user.getUser_id());
-			insertStmtUSERS.setString(2, user.getNick_name());
-			insertStmtUSERS.setString(3, user.getPassword());
+			insertStmtUSERS.setLong(2, user.getSignUpTime());
+			insertStmtUSERS.setString(3, user.getNick_name());
+			insertStmtUSERS.setString(4, user.getPassword());
 			insertStmtUSERS.executeUpdate();
 		} catch (SQLException e)
 		{

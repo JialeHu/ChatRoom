@@ -259,7 +259,7 @@ public class Server_Main implements Runnable
 						// Invalid nick_name password format
 						try
 						{
-							oos.writeObject(new Message(MsgType.REFUSE));
+							oos.writeObject(new Message(MsgType.REFUSE, null));
 						} catch (IOException e)
 						{
 							e.printStackTrace();
@@ -272,7 +272,7 @@ public class Server_Main implements Runnable
 						System.out.println("Server_Main: - Invalid Password from " + clientAddress);
 						try
 						{
-							oos.writeObject(new Message(MsgType.REFUSE));
+							oos.writeObject(new Message(MsgType.REFUSE, null));
 						} catch (IOException e)
 						{
 							e.printStackTrace();
@@ -287,7 +287,7 @@ public class Server_Main implements Runnable
 						System.out.println("Server_Main: - Create user failed for " + clientAddress);
 						try
 						{
-							oos.writeObject(new Message(MsgType.REFUSE));
+							oos.writeObject(new Message(MsgType.REFUSE, null));
 						} catch (IOException e)
 						{
 							e.printStackTrace();
@@ -301,7 +301,7 @@ public class Server_Main implements Runnable
 					System.out.println(onlineUsers.keySet());
 					try
 					{
-						oos.writeObject(new Message("", user_id, MsgType.DONE));
+						oos.writeObject(new Message(null, user_id, MsgType.DONE));
 					} catch (IOException e)
 					{
 						e.printStackTrace();
@@ -368,7 +368,7 @@ public class Server_Main implements Runnable
 				System.out.println("Server_Main: Invalid password from: " + user_id);
 				try
 				{
-					oos.writeObject(new Message(MsgType.REFUSE));
+					oos.writeObject(new Message(MsgType.REFUSE, null));
 				} catch (IOException e)
 				{
 					e.printStackTrace();
@@ -380,9 +380,9 @@ public class Server_Main implements Runnable
 				ObjectOutputStream pre_oos = onlineUsers.get(user_id);
 				try
 				{
-					pre_oos.writeObject(new Message(MsgType.REFUSE));
+					pre_oos.writeObject(new Message(MsgType.REFUSE, null));
 					pre_oos.close();
-					oos.writeObject(new Message(MsgType.DONE));
+					oos.writeObject(new Message(MsgType.DONE, dbServer.getNickName(user_id)));
 				} catch (IOException e)
 				{
 					e.printStackTrace();
@@ -402,7 +402,7 @@ public class Server_Main implements Runnable
 				{
 					try
 					{
-						oos.writeObject(new Message(MsgType.DONE));
+						oos.writeObject(new Message(MsgType.DONE, dbServer.getNickName(user_id)));
 					} catch (IOException e)
 					{
 						e.printStackTrace();
@@ -413,7 +413,7 @@ public class Server_Main implements Runnable
 					System.out.println("Server_Main: - Invalid password from: " + user_id);
 					try
 					{
-						oos.writeObject(new Message(MsgType.REFUSE));
+						oos.writeObject(new Message(MsgType.REFUSE, null));
 					} catch (IOException e)
 					{
 						e.printStackTrace();
@@ -434,7 +434,7 @@ public class Server_Main implements Runnable
 				System.out.println("Server_Main: - Invalid user ID: " + user_id);
 				try
 				{
-					oos.writeObject(new Message(MsgType.REFUSE));
+					oos.writeObject(new Message(MsgType.REFUSE, null));
 				} catch (IOException e)
 				{
 					e.printStackTrace();
@@ -445,7 +445,7 @@ public class Server_Main implements Runnable
 		
 		// Send Saved Messages when client is offline
 		Queue<Message> queue = savedMessages.get(user_id);
-		if (queue == null) System.out.println("Server_Main: - Saved Msg Queue Unfound for: " + user_id);
+		if (queue == null) System.err.println("Server_Main: - Saved Msg Queue Unfound for: " + user_id);
 		while (!queue.isEmpty())
 		{
 			try
@@ -499,24 +499,24 @@ public class Server_Main implements Runnable
 					if (dbServer.removeUser(user_id))
 					{
 						savedMessages.remove(user_id);
-						oos.writeObject(new Message(MsgType.DONE));
+						oos.writeObject(new Message(MsgType.DONE, null));
 						oos.close();
 						return;
 					} else 
 					{
 						System.out.println("Server_Main: - Remove user failed for " + user_id);
-						oos.writeObject(new Message(MsgType.REFUSE));
+						oos.writeObject(new Message(MsgType.REFUSE, null));
 					}
 					break;
 				case SET_NICKNAME:
 					String newName = ((Message) msg).getMsg();
 					if (dbServer.setNickName(user_id, newName))
 					{
-						oos.writeObject(new Message(MsgType.DONE));
+						oos.writeObject(new Message(MsgType.DONE, null));
 					} else 
 					{
 						System.out.println("Server_Main: - Set NickName failed for " + user_id);
-						oos.writeObject(new Message(MsgType.REFUSE));
+						oos.writeObject(new Message(MsgType.REFUSE, null));
 					}
 					break;
 				case SET_PASSWORD:
@@ -524,19 +524,19 @@ public class Server_Main implements Runnable
 					int blankOffset = passwords.indexOf(" ");
 					if (blankOffset < 0)
 					{
-						oos.writeObject(new Message(MsgType.REFUSE));
+						oos.writeObject(new Message(MsgType.REFUSE, null));
 						continue;
 					}
 					String oldPassword = passwords.substring(0, blankOffset);
 					String newPassword = passwords.substring(blankOffset + 1);
 					if (dbServer.setPassword(user_id, oldPassword, newPassword))
 					{
-						oos.writeObject(new Message(MsgType.DONE));
+						oos.writeObject(new Message(MsgType.DONE, null));
 					} else 
 					{
 						// Invalid password
 						System.out.println("Server_Main: Invalid password from: " + user_id);
-						oos.writeObject(new Message(MsgType.REFUSE));
+						oos.writeObject(new Message(MsgType.REFUSE, null));
 					}
 					break;
 				default:
@@ -545,6 +545,9 @@ public class Server_Main implements Runnable
 			} catch(MessageTypeException e)
 			{
 				System.out.println("Server_Main: - Wrong message type from: " + user_id + "Session continued");
+			} catch(NullPointerException e)
+			{
+				e.printStackTrace();
 			}
 		}
 	}
