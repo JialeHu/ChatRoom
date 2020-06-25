@@ -46,7 +46,6 @@ public class Server_Main implements Runnable
 	// Data
 	private final ArrayList<Integer> offlineUsers; // [user_id]
 	private final ConcurrentHashMap<Integer, ObjectOutputStream> onlineUsers; // {user_id=oos}
-	private final ArrayList<ObjectInputStream> onlineOIS; // For closing connection before server shutdown
 	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages; // {recipient=[messages]}
 	
 // Constructor
@@ -63,7 +62,6 @@ public class Server_Main implements Runnable
 		
 		// Load Users Lists from DB
 		System.out.println("Server_Main: Loading Users ...");
-		onlineOIS = new ArrayList<ObjectInputStream>();
 		onlineUsers = new ConcurrentHashMap<Integer, ObjectOutputStream>();
 		offlineUsers = new ArrayList<Integer>(Arrays.asList(dbServer.getIDs()));
 		System.out.println("Server_Main: Offline & Online Users: [ID]");
@@ -124,8 +122,8 @@ public class Server_Main implements Runnable
 		// Cut all connected sessions
 		try
 		{
-			// Stop all ois
-			for (ObjectInputStream ois : onlineOIS) ois.close();
+			// Stop all oos
+			for (ObjectOutputStream oos : onlineUsers.values()) oos.close();
 			// Stop ServerSocket
 			ss.close();
 		} catch (IOException e)
@@ -214,7 +212,6 @@ public class Server_Main implements Runnable
 		}
 		
 		// Joining
-		onlineOIS.add(ois);
 		try
 		{
 			// Keep check join message until joined or added
@@ -231,15 +228,18 @@ public class Server_Main implements Runnable
 						try
 						{
 							chat(user_id, ois, oos);
+							System.out.println("Server_Main: Connection Terminated by Server."); // return from chat()
 						} catch (Exception e)
 						{
 							System.out.println("Server_Main: Connection Terminated: " + e.toString());
+						} finally
+						{
 							// Leaving
+							oos.close();
 							leave(user_id, oos);
-							onlineOIS.remove(ois);
-							return;
 							// Session terminated
 						}
+						return;
 					} else
 					{
 						System.out.println("Server_Main: - LogIn failed from " + clientAddress);
@@ -318,33 +318,12 @@ public class Server_Main implements Runnable
 			}
 		} catch (MessageTypeException e)
 		{
-			onlineOIS.remove(ois);
 			System.out.println("Server_Main: - Wrong message type from " + clientAddress + " Session terminated");
 			return;
 		} catch (Exception e)
 		{
-			onlineOIS.remove(ois);
-			System.out.println("Server_Main: - Join failed from " + clientAddress + " " + e.toString());
-			e.printStackTrace();
+			System.out.println("Server_Main: - Join terminated from " + clientAddress + " " + e.toString());
 			return;
-		}
-	}
-	
-// Check Message Type
-	/**
-	 * Check incoming {@code Object} type, return {@code Message} type if it is in this type.
-	 * @param msg {@code Object} to be checked
-	 * @return same object in {@code Message} type
-	 * @throws MessageTypeException if incoming {@code Object} is not in {@code Message} type
-	 */
-	private MsgType checkMsgType(Object msg) throws MessageTypeException
-	{
-		if (msg instanceof Message)
-		{
-			return ((Message) msg).getMsgType();
-		} else
-		{
-			throw new MessageTypeException("Not in Type Message");
 		}
 	}
 	
@@ -501,7 +480,7 @@ public class Server_Main implements Runnable
 					{
 						savedMessages.remove(user_id);
 						oos.writeObject(new Message(MsgType.DONE, null));
-						oos.close();
+						oos.writeObject(new Message(MsgType.LOGOUT, "User Deleted"));
 						return;
 					} else 
 					{
@@ -514,6 +493,7 @@ public class Server_Main implements Runnable
 					if (dbServer.setNickName(user_id, newName))
 					{
 						oos.writeObject(new Message(MsgType.DONE, null));
+						sendUserList();
 					} else 
 					{
 						System.out.println("Server_Main: - Set NickName failed for " + user_id);
@@ -525,19 +505,21 @@ public class Server_Main implements Runnable
 					int blankOffset = passwords.indexOf(" ");
 					if (blankOffset < 0)
 					{
-						oos.writeObject(new Message(MsgType.REFUSE, null));
-						continue;
+						oos.writeObject(new Message(MsgType.REFUSE, "Wrong Format"));
+						break;
 					}
 					String oldPassword = passwords.substring(0, blankOffset);
 					String newPassword = passwords.substring(blankOffset + 1);
 					if (dbServer.setPassword(user_id, oldPassword, newPassword))
 					{
 						oos.writeObject(new Message(MsgType.DONE, null));
+						oos.writeObject(new Message(MsgType.LOGOUT, "ReJoin"));
+						return;
 					} else 
 					{
 						// Invalid password
 						System.out.println("Server_Main: Invalid password from: " + user_id);
-						oos.writeObject(new Message(MsgType.REFUSE, null));
+						oos.writeObject(new Message(MsgType.REFUSE, "Wrong Old Password"));
 					}
 					break;
 				default:
@@ -568,13 +550,31 @@ public class Server_Main implements Runnable
 			return;
 		}
 		// Update Users Lists
+		if (onlineUsers.containsKey(user_id)) offlineUsers.add(user_id);
 		onlineUsers.remove(user_id);
-		offlineUsers.add(user_id);
 		System.out.println("Server_Main: Offline & Online Users: [ID]");
 		System.out.println(offlineUsers);
 		System.out.println(onlineUsers.keySet());
 		sendUserList();
 		System.out.println("Server_Main: Leave succeed: " + user_id);
+	}
+
+// Check Message Type
+	/**
+	 * Check incoming {@code Object} type, return {@code Message} type if it is in this type.
+	 * @param msg {@code Object} to be checked
+	 * @return same object in {@code Message} type
+	 * @throws MessageTypeException if incoming {@code Object} is not in {@code Message} type
+	 */
+	private MsgType checkMsgType(Object msg) throws MessageTypeException
+	{
+		if (msg instanceof Message)
+		{
+			return ((Message) msg).getMsgType();
+		} else
+		{
+			throw new MessageTypeException("Not in Type Message");
+		}
 	}
 	
 // Add User

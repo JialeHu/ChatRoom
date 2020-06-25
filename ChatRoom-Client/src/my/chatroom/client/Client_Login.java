@@ -28,7 +28,7 @@ public final class Client_Login implements ActionListener
 	// Login GUI objects
 	private JFrame loginWindow = new JFrame("Chat Room - Welcome");
 	
-	private JTextArea		logInTextArea		= new JTextArea("Please Enter Your User ID and Password:");
+	private JTextArea		logInTextArea		= new JTextArea("Welcome to Chat Room");
 	private JButton  		loginButton 		= new JButton("Log In");
 	private JPanel      	loginPanel       	= new JPanel();
 	private JPanel      	buttonPanel       	= new JPanel();
@@ -36,7 +36,7 @@ public final class Client_Login implements ActionListener
 	private JPasswordField	passwordTextField 	= new JPasswordField();
 	private JButton  		newUserButton 		= new JButton("New User? Sign Up");
 	
-	private JTextArea		signUpTextArea		= new JTextArea("Please Enter Your Nick Name, Then Enter Password Twice:");
+//	private JTextArea		signUpTextArea		= new JTextArea("Please Enter Your Nick Name, Then Enter Password Twice:");
 	private JButton			backButton			= new JButton("Back to Log In");
 	private JButton  		signUpButton 		= new JButton("Sign Up");
 	private JPanel      	signUpPanel       	= new JPanel();
@@ -65,15 +65,29 @@ public final class Client_Login implements ActionListener
 		}
 		
 		// Set Components
-		loginPanel.setLayout(new GridLayout(2, 1));
+		loginPanel.setLayout(new GridLayout(4, 1));
+		loginPanel.add(new JLabel("Enter Your User ID: "));
+		loginPanel.add(user_idTextField);
+		loginPanel.add(new JLabel("Enter Your Password: "));
+		loginPanel.add(passwordTextField);
+		
 		buttonPanel.setLayout(new GridLayout(2, 1));
-		signUpPanel.setLayout(new GridLayout(4, 1));
+		buttonPanel.add(loginButton);
+		buttonPanel.add(newUserButton);
+		
+		signUpPanel.setLayout(new GridLayout(5, 1));
+		signUpPanel.add(new JLabel("Enter Your Nick Name: "));
+		signUpPanel.add(nickNameTextField);
+		signUpPanel.add(new JLabel("Enter Your Password Twice: "));
+		signUpPanel.add(newPw1Field);
+		signUpPanel.add(newPw2Field);
+		
 		logInTextArea.setEditable(false);
 		logInTextArea.setEnabled(false);
-		signUpTextArea.setEditable(false);
-		signUpTextArea.setEnabled(false);
-		signUpTextArea.setLineWrap(true);
-		signUpTextArea.setWrapStyleWord(true);
+//		signUpTextArea.setEditable(false);
+//		signUpTextArea.setEnabled(false);
+//		signUpTextArea.setLineWrap(true);
+//		signUpTextArea.setWrapStyleWord(true);
 		newUserTextArea.setEditable(false);
 		// Load LogIn Panel
 		loadLogIn();
@@ -161,30 +175,18 @@ public final class Client_Login implements ActionListener
 		{
 			String nick_name = nickNameTextField.getText().trim();
 			
-			if (nick_name.length() == 0)
-			{
-				new Client_Error(dim, "Please Enter Nick Name");
-				return;
-			} else if (nick_name.length() > 30)
-			{
-				new Client_Error(dim, "Nick Name Cannot Exceed 30 Characters");
-				return;
-			}
+			nick_name = mainClient.checkNickNameFormat(nick_name);
+			if (nick_name == null) return;
+			
 			String pw1 = new String(newPw1Field.getPassword());
 			String pw2 = new String(newPw2Field.getPassword());
-			if (pw1.length() < 6 || pw1.length() > 30)
-			{
-				new Client_Error(dim, "Password Length Must Be 6-30 Characters");
-				return;
-			} else if (!pw1.equals(pw2))
-			{
-				new Client_Error(dim, "Passwords are Not Consistent");
-				return;
-			}
+			
+			String pw = mainClient.checkPasswordFormat(pw1, pw2);
+			if (pw == null) return;
 			
 			System.out.println(nick_name + " " + pw1 + " " + pw2);
 			
-			Message joinMsg = new Message(nick_name + " " + pw1, 0, MsgType.ADD_USER);
+			Message joinMsg = new Message(nick_name + " " + pw, 0, MsgType.ADD_USER);
 			try
 			{
 				oos.writeObject(joinMsg);
@@ -225,15 +227,9 @@ public final class Client_Login implements ActionListener
 	{
 		loginWindow.getContentPane().removeAll();
 		
-		loginWindow.getContentPane().add(logInTextArea,"North");
+		loginWindow.getContentPane().add(logInTextArea, "North");
 		loginWindow.getContentPane().add(loginPanel, "Center");
 		loginWindow.getContentPane().add(buttonPanel,"South");
-		
-		loginPanel.add(user_idTextField);
-		loginPanel.add(passwordTextField);
-		
-		buttonPanel.add(loginButton);
-		buttonPanel.add(newUserButton);
 		
 		loginWindow.revalidate();
 		loginWindow.getContentPane().repaint();
@@ -246,11 +242,6 @@ public final class Client_Login implements ActionListener
 		loginWindow.getContentPane().add(backButton,"North");
 		loginWindow.getContentPane().add(signUpPanel, "Center");
 		loginWindow.getContentPane().add(signUpButton,"South");
-		
-		signUpPanel.add(signUpTextArea);
-		signUpPanel.add(nickNameTextField);
-		signUpPanel.add(newPw1Field);
-		signUpPanel.add(newPw2Field);
 		
 		loginWindow.revalidate();
 		loginWindow.getContentPane().repaint();

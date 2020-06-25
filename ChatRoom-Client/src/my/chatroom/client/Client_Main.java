@@ -172,7 +172,7 @@ public final class Client_Main implements ActionListener, Runnable
 			updateUserList();
 		} catch (ClassNotFoundException | IOException e)
 		{
-			new Client_Error(dim, e.toString());
+			new Client_Error(dim, e.toString(), user_id);
 			return;
 		}
 		System.out.println("User Lists Received");
@@ -194,7 +194,7 @@ public final class Client_Main implements ActionListener, Runnable
 	{
 		if (onlineUsers == null || offlineUsers == null)
 		{
-			new Client_Error(dim, "Failed Updating User List");
+			new Client_Error(dim, "Failed Updating User List", user_id);
 			return;
 		}
 		
@@ -221,30 +221,12 @@ public final class Client_Main implements ActionListener, Runnable
 		offlineList.setListData(offlineArray);
 	}
 	
-	// Check Message Type
-	/**
-	 * Check incoming {@code Object} type, return {@code Message} type if it is in this type.
-	 * @param msg {@code Object} to be checked
-	 * @return same object in {@code Message} type
-	 * @throws ClassNotFoundException if the object is not {@code Message} type
-	 */
-	private Message checkMsgType(Object msg) throws ClassNotFoundException
-	{
-		if (msg instanceof Message)
-		{
-			return (Message) msg;
-		} else 
-		{
-			throw new ClassNotFoundException("Invalid Object Type from Server");
-		}
-	}
-	
 	@Override
 	public void actionPerformed(ActionEvent ae)
 	{
 		if (ae.getSource() == settingsButton)
 		{
-			new Client_Settings(this, dim);
+			new Client_Settings(this, dim, user_id);
 		} else if (ae.getSource() == clearButton)
 		{
 			onlineList.clearSelection();
@@ -272,7 +254,7 @@ public final class Client_Main implements ActionListener, Runnable
 				continue;
 			} catch (IOException e) // Connection Error
 			{
-				new Client_Error(dim, "Connection Error, Please Exit and Login Again\n" + e.toString());
+				new Client_Error(dim, "Connection Interrupted, Please Exit and Login Again\n" + e.toString(), user_id);
 				mainWindow.setTitle("Chat Room - " + user_id + " - OFFLINE");
 				return;
 			}
@@ -289,6 +271,8 @@ public final class Client_Main implements ActionListener, Runnable
 				updateUserList();
 				break;
 			case USER_INFO:
+			case DONE:
+			case REFUSE:
 				try
 				{
 					msgQueue.put(msg);
@@ -309,11 +293,79 @@ public final class Client_Main implements ActionListener, Runnable
 		}
 	}
 	
+// Check Message Type
+	/**
+	 * Check incoming {@code Object} type, return {@code Message} type if it is in this type.
+	 * @param msg {@code Object} to be checked
+	 * @return same object in {@code Message} type
+	 * @throws ClassNotFoundException if the object is not {@code Message} type
+	 */
+	private Message checkMsgType(Object msg) throws ClassNotFoundException
+	{
+		if (msg instanceof Message)
+		{
+			return (Message) msg;
+		} else 
+		{
+			throw new ClassNotFoundException("Invalid Object Type from Server");
+		}
+	}
+	
 	public String getMyInfo() throws IOException, InterruptedException
 	{
 		oos.writeObject(new Message(null, user_id, MsgType.USER_INFO));
 		Message reply = msgQueue.take();
 		return reply.getMsg();
+	}
+	
+	public Message setNickName(String newNickName) throws IOException, InterruptedException
+	{
+		oos.writeObject(new Message(newNickName, user_id, MsgType.SET_NICKNAME));
+		Message reply = msgQueue.take();
+		return reply;
+	}
+	
+	public Message setPassword(String oldPw, String newPw) throws IOException, InterruptedException
+	{
+		oos.writeObject(new Message(oldPw + " " + newPw, user_id, MsgType.SET_PASSWORD));
+		Message reply = msgQueue.take();
+		return reply;
+	}
+	
+	public Message removeUser() throws IOException, InterruptedException
+	{
+		oos.writeObject(new Message(MsgType.RM_USER, null));
+		Message reply = msgQueue.take();
+		return reply;
+	}
+
+	public String checkNickNameFormat(String nickName)
+	{
+		nickName = nickName.trim();
+		if (nickName.length() == 0)
+		{
+			new Client_Error(dim, "Please Enter Nick Name", user_id);
+			return null;
+		} else if (nickName.length() > 30)
+		{
+			new Client_Error(dim, "Nick Name Cannot Exceed 30 Characters", user_id);
+			return null;
+		}
+		return nickName;
+	}
+	
+	public String checkPasswordFormat(String pw1, String pw2)
+	{
+		if (pw1.length() < 6 || pw1.length() > 30)
+		{
+			new Client_Error(dim, "Password Length Must Be 6-30 Characters", user_id);
+			return null;
+		} else if (!pw1.equals(pw2))
+		{
+			new Client_Error(dim, "Passwords are Not Consistent", user_id);
+			return null;
+		}
+		return pw1;
 	}
 	
 	

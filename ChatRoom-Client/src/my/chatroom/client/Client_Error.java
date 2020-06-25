@@ -30,5 +30,11 @@ public class Client_Error
 		errorWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		errorWindow.setVisible(true);
 	}
+	
+	public Client_Error(Dimension dim, String errorMsg, int user_id)
+	{
+		this(dim, errorMsg);
+		errorWindow.setTitle("Chat Room - " + user_id + " - Error Message");
+	}
 
 }
