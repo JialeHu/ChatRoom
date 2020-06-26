@@ -14,10 +14,13 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Set;
+import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
@@ -43,6 +46,8 @@ public final class Client_Main implements ActionListener, Runnable
 	// User List
 	private HashMap<Integer, String> onlineUsers;
 	private HashMap<Integer, String> offlineUsers;
+	private List<Integer> onlineIDs;
+	private List<Integer> offlineIDs;
 	
 	// Message Queue
 	private BlockingQueue<Message> msgQueue;
@@ -72,6 +77,7 @@ public final class Client_Main implements ActionListener, Runnable
 	
 	private JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, chatPanel);
 
+// Constructor
 	private Client_Main(String serverAddress, int serverPort)
 	{
 		// Setup System Info
@@ -184,14 +190,10 @@ public final class Client_Main implements ActionListener, Runnable
             }
         });
 		
-		// Build Setting Window
-//		settingsWindow.setSize(300, mainWindow.getSize().height);
-//		settingsWindow.setLocation(mainWindow.getLocation().x - settingsWindow.getSize().width, mainWindow.getLocation().y);
-//		settingsWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
-		System.out.println("Windows are set");
+		System.out.println("End of main constructor");
 	}
 	
+// Logged in API
 	public void loggedIn(Socket s, ObjectOutputStream oos, ObjectInputStream ois, int user_id, String nickName)
 	{
 		this.s = s;
@@ -203,6 +205,7 @@ public final class Client_Main implements ActionListener, Runnable
 		this.initializeClient();
 	}
 	
+// Construct after logged in
 	private void initializeClient()
 	{
 		// Receive User Lists
@@ -230,6 +233,7 @@ public final class Client_Main implements ActionListener, Runnable
 		System.out.println("client is up");
 	}
 	
+// Action Performed
 	@Override
 	public void actionPerformed(ActionEvent ae)
 	{
@@ -245,13 +249,20 @@ public final class Client_Main implements ActionListener, Runnable
 			String msgStr = messageTextField.getText();
 			if (msgStr.isBlank()) return;
 			Message msg;
+			// Public Messages
 			if (onlineList.isSelectionEmpty() && offlineList.isSelectionEmpty())
 			{
 				msg = new Message(msgStr, user_id, (int[]) null);
-			} else
+			} else // Private Messages
 			{
-// To be implemented, Include self as recipient
-				msg = new Message(msgStr, user_id, new int[]{user_id});
+				int[] recipients = getSelectedUsers();
+				if (recipients.length == 1 && recipients[0] == user_id) return; // If only self is selected
+				if (recipients == null || recipients.length == 0) // Error in getSelectedUsers();
+				{
+					new Client_Error(dim, "Failed to Get Selected Users, Please Try Again.", user_id);
+					return;
+				} 
+				msg = new Message(msgStr, user_id, recipients);
 			}
 			try
 			{
@@ -266,11 +277,12 @@ public final class Client_Main implements ActionListener, Runnable
 		
 	}
 	
-	// Receiving from Server
+// Receiving from Server
 	@Override
 	public void run()
 	{
-
+		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm MMM dd");
+		
 		while (true)
 		{
 			Message msg;
@@ -294,8 +306,9 @@ public final class Client_Main implements ActionListener, Runnable
 			case MESSAGE:
 				int[] recipients = msg.getRecipients();
 				String reciStr = (recipients == null) ? "Everyone" : Arrays.toString(recipients);
-				String msgStr = newLine + " -" + new Date(msg.getTime()) + "- " + newLine + 
-								getNickName(msg.getUser_id()) + " (To: " + reciStr + "): " + msg.getMsg() + newLine;
+				String dateStr = newLine + " -" + dateFormat.format(new Date(msg.getTime())) + "- ";
+				String msgStr = newLine + getNickName(msg.getUser_id()) + " (To: " + reciStr + "): " + msg.getMsg() + newLine;
+				messageTextArea.append(dateStr);
 				messageTextArea.append(msgStr);
 				messageTextArea.setCaretPosition(messageTextArea.getDocument().getLength());
 				break;
@@ -319,14 +332,14 @@ public final class Client_Main implements ActionListener, Runnable
 				System.out.println("LOG OUT by Server: " + msg.getMsg());
 				break;
 			default:
-				new Client_Error(dim, msg.toString());
+				new Client_Error(dim, msg.toString(), user_id);
 				break;
 			}
 			
-			
 		}
 	}
-	
+
+// Update User List
 	private void updateUserList()
 	{
 		if (onlineUsers == null || offlineUsers == null)
@@ -335,12 +348,17 @@ public final class Client_Main implements ActionListener, Runnable
 			return;
 		}
 		
-		Set<Integer> onlineKeys = onlineUsers.keySet();
-		Set<Integer> offlineKeys = offlineUsers.keySet();
-		String[] onlineArray = new String[onlineKeys.size()];
-		String[] offlineArray = new String[offlineKeys.size()];
+		// ID set to list for JList indexing
+		onlineIDs = new ArrayList<Integer>(onlineUsers.keySet());
+		offlineIDs = new ArrayList<Integer>(offlineUsers.keySet());
+		// Sort based on NickName
+		Collections.sort(onlineIDs, (k1, k2) -> {return onlineUsers.get(k1).compareTo(onlineUsers.get(k2));});
+		Collections.sort(offlineIDs, (k1, k2) -> {return offlineUsers.get(k1).compareTo(offlineUsers.get(k2));});
+		// String[] to be added to JList
+		String[] onlineArray = new String[onlineIDs.size()];
+		String[] offlineArray = new String[offlineIDs.size()];
 		int i = 0;
-		for (int key : onlineKeys)
+		for (int key : onlineIDs)
 		{
 			if (key == user_id) 
 			{
@@ -353,13 +371,11 @@ public final class Client_Main implements ActionListener, Runnable
 			i++;
 		}
 		i = 0;
-		for (int key : offlineKeys)
+		for (int key : offlineIDs)
 		{
 			offlineArray[i] = offlineUsers.get(key) + " (ID: " + key + ")";
 			i++;
 		}
-		Arrays.sort(onlineArray);
-		Arrays.sort(offlineArray);
 		onlineList.setListData(onlineArray);
 		offlineList.setListData(offlineArray);
 	}
@@ -381,7 +397,25 @@ public final class Client_Main implements ActionListener, Runnable
 			throw new ClassNotFoundException("Invalid Object Type from Server");
 		}
 	}
+
+// Get Selected Users on Lists
+	private int[] getSelectedUsers()
+	{		
+		int[] onlineIdx = onlineList.getSelectedIndices();
+		int[] offlineIdx = offlineList.getSelectedIndices();
+		int[] selectedIDs = new int[onlineIdx.length + offlineIdx.length];
+		int i = 0;
+		try {
+			for (int idx : onlineIdx) selectedIDs[i++] = onlineIDs.get(idx);
+			for (int idx : offlineIdx) selectedIDs[i++] = offlineIDs.get(idx);
+		} catch (Exception e)
+		{
+			return null;
+		}
+		return selectedIDs;
+	}
 	
+// Get nick name given user id
 	public String getNickName(int user_id)
 	{
 		String nickName = onlineUsers.get(user_id);
@@ -389,6 +423,7 @@ public final class Client_Main implements ActionListener, Runnable
 		return nickName;
 	}
 	
+// Get my info API
 	public String getMyInfo() throws IOException, InterruptedException
 	{
 		oos.writeObject(new Message(null, user_id, MsgType.USER_INFO));
@@ -396,6 +431,7 @@ public final class Client_Main implements ActionListener, Runnable
 		return reply.getMsg();
 	}
 	
+// Set my nick name API
 	public Message setNickName(String newNickName) throws IOException, InterruptedException
 	{
 		oos.writeObject(new Message(newNickName, user_id, MsgType.SET_NICKNAME));
@@ -403,6 +439,7 @@ public final class Client_Main implements ActionListener, Runnable
 		return reply;
 	}
 	
+// Set my password API
 	public Message setPassword(String oldPw, String newPw) throws IOException, InterruptedException
 	{
 		oos.writeObject(new Message(oldPw + " " + newPw, user_id, MsgType.SET_PASSWORD));
@@ -410,6 +447,7 @@ public final class Client_Main implements ActionListener, Runnable
 		return reply;
 	}
 	
+// Delete my account API
 	public Message removeUser() throws IOException, InterruptedException
 	{
 		oos.writeObject(new Message(MsgType.RM_USER, null));
@@ -417,6 +455,7 @@ public final class Client_Main implements ActionListener, Runnable
 		return reply;
 	}
 
+// Check Format of new nick name
 	public String checkNickNameFormat(String nickName)
 	{
 		nickName = nickName.trim();
@@ -432,6 +471,7 @@ public final class Client_Main implements ActionListener, Runnable
 		return nickName;
 	}
 	
+// Check format of new password
 	public String checkPasswordFormat(String pw1, String pw2)
 	{
 		if (pw1.length() < 6 || pw1.length() > 30)

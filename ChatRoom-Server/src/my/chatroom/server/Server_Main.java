@@ -484,7 +484,7 @@ public class Server_Main implements Runnable
 						sendToAll((Message) msg);
 					} else
 					{
-						sendTo((Message) msg, recipients);
+						sendTo((Message) msg, user_id, recipients);
 					}
 					break;
 				case USER_INFO:
@@ -672,17 +672,26 @@ public class Server_Main implements Runnable
 	
 // Send To
 	/**
-	 * Send/save {@code Message} to specified recipient(s).
+	 * Send/save {@code Message} to specified recipient(s). Always copy message to sender.
 	 * @param msg {@code Message} to be sent/saved
 	 * @param recipient_id an array of recipient id
 	 */
-	private synchronized void sendTo(Message msg, int[] recipient_id)
+	private synchronized void sendTo(Message msg, int user_id, int[] recipient_id)
 	{
-		for (int id : recipient_id)
+		// Copy message to sender
+		ObjectOutputStream oos = onlineUsers.get(user_id);
+		try
 		{
+			oos.writeObject(msg);
+		}
+		catch (IOException e) {}
+		// Send to recipients
+		for (int id : recipient_id)
+		{	
+			if (id == user_id) continue; // Send message to sender separately
 			if (onlineUsers.containsKey(id))
 			{
-				ObjectOutputStream oos = onlineUsers.get(id);
+				oos = onlineUsers.get(id);
 				try
 				{
 					oos.writeObject(msg);
@@ -694,7 +703,7 @@ public class Server_Main implements Runnable
 				savedMessages.get(id).add(msg);
 			} else
 			{
-				System.out.println("Server_Main: - recipient " + id + " is not a user.");
+				System.err.println("Server_Main: - recipient " + id + " is not a user.");
 			}
 		}
 		System.out.println("Server_Main: Saved Messages for Each User: {ID=[MsgQueue]}");
