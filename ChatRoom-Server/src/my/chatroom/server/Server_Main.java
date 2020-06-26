@@ -1,6 +1,7 @@
 package my.chatroom.server;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
@@ -159,11 +160,27 @@ public class Server_Main implements Runnable
 // shutdownCleanup()
 	/**
 	 * Wraps up right before normal server shutdown invoked by calling {@code serverShutdown(int waitTime)}.
+	 * Save savedMessages to DB. If failed, try saving "savedMessages.ser".
 	 * @return {@code true} if wrap up is successful
 	 */
 	private boolean shutdownCleanup()
 	{
-		return dbServer.saveAllMessages();
+		// Try save to DB
+		if (dbServer.saveAllMessages()) return true;
+		// Save backup instead as a .ser file
+		System.err.println("Server_Main: - Failed to Save to DB, Saving as \"savedMessages.ser\" Instead.");
+		try
+		{
+			ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("savedMessages.ser"));
+			oos.writeObject(savedMessages);
+			oos.close();
+		} catch (IOException e)
+		{
+			System.err.println("Server_Main: - Failed to Save Back Up File as \"savedMessages.ser\".");
+			e.printStackTrace();
+		}
+		System.out.println("Server_Main: \"savedMessages.ser\" Saved.");
+		return false;
 	}
 
 // run()

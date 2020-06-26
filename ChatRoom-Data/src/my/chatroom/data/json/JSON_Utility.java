@@ -7,6 +7,7 @@ import java.util.Queue;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import my.chatroom.data.trans.Message;
 import my.chatroom.data.trans.MsgType;
@@ -29,7 +30,7 @@ public class JSON_Utility
 		return out.toString();
 	}
 	
-	public static Message decodeMSG(String json) throws Exception
+	public static Message decodeMSG(String json) throws ParseException
 	{
 		JSONParser parser = new JSONParser();
 		JSONObject obj = (JSONObject) parser.parse(json);
@@ -38,15 +39,19 @@ public class JSON_Utility
 		int user_id = ((Long) obj.get("user_id")).intValue();
 		
 		JSONArray array = (JSONArray) obj.get("recipients");
-		int[] recipients = new int[array.size()];
-		int i = 0;
-		for (Object ele : array) recipients[i++] = ((Long) ele).intValue();
+		int[] recipients;
+		if (array == null) recipients = null;
+		else 
+		{
+			recipients = new int[array.size()];
+			int i = 0;
+			for (Object ele : array) recipients[i++] = ((Long) ele).intValue();
+		}
 		
 		MsgType msgType = MsgType.valueOf((String) obj.get("msgType"));
 		long time = (long) obj.get("time");
 		
 		Message message = new Message(msg, user_id, recipients, msgType, time);
-		
 		return message;
 	}
 	
@@ -59,13 +64,20 @@ public class JSON_Utility
 		return out.toString();
 	}
 	
-	public static Queue<Message> decodeMSGs(String json) throws Exception
+	public static Queue<Message> decodeMSGs(String json)
 	{
 		Queue<Message> queue = new LinkedList<Message>();
 		
 		JSONParser parser = new JSONParser();
-		JSONArray array = (JSONArray) parser.parse(json);
-		for (Object ele : array) queue.offer(decodeMSG((String) ele));
+		try
+		{
+			JSONArray array = (JSONArray) parser.parse(json);
+			for (Object ele : array) queue.offer(decodeMSG((String) ele));
+		} catch (Exception e)
+		{
+			System.err.println("JSON Decode Failure, Input: " + json);
+			e.printStackTrace();
+		}
 		
 		return queue;
 	}

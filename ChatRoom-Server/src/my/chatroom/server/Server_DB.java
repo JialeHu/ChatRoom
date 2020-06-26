@@ -62,11 +62,11 @@ public class Server_DB
 		} catch (ClassNotFoundException e)
 		{
 			System.err.println("Server_DB: - Failed to load db2j. " + e.getMessage());
-			throw new FatalDataBaseException("Failed to load db2");
+			throw new FatalDataBaseException("Failed to load db2 " + e.toString());
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to connect DB. " + e.getMessage());
-			throw new FatalDataBaseException("Failed to connect DB");
+			throw new FatalDataBaseException("Failed to connect DB " + e.toString());
 		}
 		
 		// Prepare SQL statement
@@ -87,7 +87,7 @@ public class Server_DB
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to prepare SQL statements. " + e.getMessage());
-			throw new FatalDataBaseException("Failed to prepare SQL statements");
+			throw new FatalDataBaseException("Failed to prepare SQL statements " + e.toString());
 		}
 		
 		// Retrieve users from DB
@@ -108,11 +108,11 @@ public class Server_DB
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to retrieve data from DB. " + e.getMessage());
-			throw new FatalDataBaseException("Failed to retrieve data from DB");
+			throw new FatalDataBaseException("Failed to retrieve data from DB " + e.toString());
 		} catch (Exception e)
 		{
 			System.err.println("Server_DB: - Failed to load user. " + e.getMessage());
-			throw new FatalDataBaseException("Failed to load user");
+			throw new FatalDataBaseException("Failed to load user " + e.toString());
 		}
 		System.out.println("Server_DB: Users Successful Loaded: [ID]");
 		System.out.println(usersMap.keySet());
@@ -133,11 +133,11 @@ public class Server_DB
 		} catch (SQLException e)
 		{
 			System.err.println("Server_DB: - Failed to retrieve savedMessages from DB. " + e.getMessage());
-			throw new FatalDataBaseException("Failed to retrieve savedMessages from DB");
+			throw new FatalDataBaseException("Failed to retrieve savedMessages from DB " + e.toString());
 		} catch (Exception e)
 		{
 			System.err.println("Server_DB: - Failed to load message. " + e.getMessage());
-			throw new FatalDataBaseException("Failed to load message");
+			throw new FatalDataBaseException("Failed to load message " + e.toString());
 		}
 		System.out.println("Server_DB: Saved Messages Successful Loaded: {ID=[MSGS]}");
 		System.out.println(savedMessages);
@@ -168,8 +168,10 @@ public class Server_DB
 	public boolean saveAllMessages()
 	{
 		System.out.println("Server_DB: Saving all savedMessages ... (With Delete First)");
+		// Delete All
 		if (!deleteAllMessages()) return false;
 			
+		// Save All
 		for (int user_id : savedMessages.keySet())
 		{
 			// Queue to JSON string

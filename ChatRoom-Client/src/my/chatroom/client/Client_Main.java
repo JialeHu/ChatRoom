@@ -8,6 +8,8 @@ import java.awt.GridLayout;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -20,7 +22,6 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 
 import my.chatroom.data.trans.*;
 
@@ -29,9 +30,11 @@ public final class Client_Main implements ActionListener, Runnable
 // Instance Variables
 
 	// Connection
+	@SuppressWarnings("unused") // Socket Unused, Prevent being GC
 	private Socket s;
 	private ObjectInputStream  ois;
 	private ObjectOutputStream oos;
+	String newLine = System.lineSeparator();
 	
 	// User
 	private int user_id;
@@ -51,22 +54,19 @@ public final class Client_Main implements ActionListener, Runnable
 	private JFrame     	mainWindow    		= new JFrame("Chat Room"); 
 	private JTextField 	messageTextField	= new JTextField("Enter a message here");
 	private JButton     sendButton			= new JButton("Send");
-	private JTextArea  	messagTextArea  	= new JTextArea("Received chat messages will be shown here.\n");
-	private JScrollPane messageScrollPane 	= new JScrollPane(messagTextArea);
+	private JTextArea  	messageTextArea  	= new JTextArea("Received chat messages will be shown here.\n");
+	private JScrollPane messageScrollPane 	= new JScrollPane(messageTextArea);
 	
 	// User List GUI objects
-	private JFrame      	settingsWindow      = new JFrame("Chat Room - Settings");
-	
-	
-	private JTextField  	privateTextField  	= new JTextField("Enter a PRIVATE message to be sent to SELECTED clients");
 	private JButton     	settingsButton      = new JButton("Settings");
 	private JButton     	clearButton       	= new JButton("Clear Selections");
 	private JPanel      	leftPanel     	  	= new JPanel();
-	private JPanel      	userListPanel       = new JPanel();
+	private JPanel 			listPanel 			= new JPanel();
 	private JList<String> 	onlineList      	= new JList<String>();
 	private JList<String> 	offlineList   		= new JList<String>();
-	private JScrollPane 	onlineScrollPane  	= new JScrollPane(onlineList);
-	private JScrollPane 	offlineScrollPane 	= new JScrollPane(offlineList);
+	private JScrollPane 	userListScrollPane  = new JScrollPane();
+//	private JScrollPane 	onlineScrollPane  	= new JScrollPane(onlineList);
+//	private JScrollPane 	offlineScrollPane 	= new JScrollPane(offlineList);
 	
 	private JPanel			chatPanel = new JPanel();
 	
@@ -105,33 +105,64 @@ public final class Client_Main implements ActionListener, Runnable
 		onlineList.setLayoutOrientation(JList.VERTICAL);
 		onlineList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
 		
-		chatPanel.setBackground(Color.LIGHT_GRAY);
-		
-		leftPanel.add(settingsButton, "North");
-		leftPanel.add(clearButton, "North");
-		
-		JPanel listPanel = new JPanel();
 		JLabel onlineLabel = new JLabel("Online Users:");
 		JLabel offlineLabel = new JLabel("Offline Users:");
-		listPanel.setLayout(new GridLayout(4, 1));
-		leftPanel.add(listPanel, "Center");
+		
+		chatPanel.setBackground(Color.LIGHT_GRAY);
+		
+		leftPanel.setLayout(new BorderLayout());
+		leftPanel.setBackground(Color.GRAY);
+		leftPanel.add(settingsButton, BorderLayout.NORTH);
+		leftPanel.add(clearButton, BorderLayout.SOUTH);
+		leftPanel.add(listPanel, BorderLayout.CENTER);
+//		leftPanel.add(userListScrollPane, BorderLayout.CENTER);
+		
+//		userListScrollPane.setViewportView(listPanel);
+//		userListScrollPane.getViewport().add(listPanel);
+		Dimension d = new Dimension(listPanel.getPreferredSize());
+		userListScrollPane.getViewport().setPreferredSize(d);
+		userListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		userListScrollPane.setPreferredSize(new Dimension(-1, 100));
+		userListScrollPane.setBackground(Color.BLUE);
+//		userListScrollPane.setLayout(new GridLayout(4, 1));
+//		userListScrollPane.add(onlineLabel);
+//		userListScrollPane.add(onlineList);
+//		userListScrollPane.add(offlineLabel);
+//		userListScrollPane.add(offlineList);
+		userListScrollPane.setVisible(true);
+		
+		listPanel.setLayout(new GridLayout(4,1));
+		listPanel.setBackground(Color.GRAY);
 		listPanel.add(onlineLabel);
 		listPanel.add(onlineList);
 		listPanel.add(offlineLabel);
 		listPanel.add(offlineList);
-		leftPanel.setBackground(Color.GRAY);
 		onlineLabel.setBackground(Color.GRAY);
 		onlineLabel.setOpaque(true);
 		offlineLabel.setBackground(Color.GRAY);
 		offlineLabel.setOpaque(true);
+//		onlineScrollPane.setBackground(Color.GRAY);
 		onlineList.setBackground(Color.GRAY);
+//		offlineScrollPane.setBackground(Color.GRAY);
 		offlineList.setBackground(Color.GRAY);
 		onlineList.setFont(new Font("default", Font.PLAIN, 20));
 		offlineList.setFont(new Font("default", Font.PLAIN, 20));
 		
-		chatPanel.setLayout(new GridLayout(2,1));
-		chatPanel.add(messagTextArea);
-		chatPanel.add(messageTextField);
+		
+		chatPanel.setLayout(new BorderLayout());
+		chatPanel.add(messageScrollPane, BorderLayout.CENTER);
+		JPanel textFieldPanel = new JPanel();
+		chatPanel.add(textFieldPanel, BorderLayout.SOUTH);
+		textFieldPanel.setLayout(new BoxLayout(textFieldPanel, BoxLayout.X_AXIS));
+		textFieldPanel.add(messageTextField);
+		textFieldPanel.add(sendButton);
+		
+		messageTextArea.setText("Select User(s) to Send Private Messages."+newLine+"Clear Selections to Send Public Messsages."+newLine);
+		messageTextArea.setEditable(false);
+		messageTextArea.setFont(new Font("default", Font.PLAIN, 15));
+		messageTextArea.setLineWrap(true);
+		messageTextArea.setWrapStyleWord(true);
+
 		
 		
 		splitPane.setDividerLocation(300);
@@ -142,6 +173,17 @@ public final class Client_Main implements ActionListener, Runnable
 		
 		
 		settingsButton.addActionListener(this);
+		clearButton.addActionListener(this);
+		sendButton.addActionListener(this);
+		
+		messageTextField.addActionListener(this);
+		messageTextField.addMouseListener(new MouseAdapter(){
+            @Override
+            public void mousePressed(MouseEvent e){
+            	messageTextField.setText("");
+            }
+        });
+		
 		// Build Setting Window
 //		settingsWindow.setSize(300, mainWindow.getSize().height);
 //		settingsWindow.setLocation(mainWindow.getLocation().x - settingsWindow.getSize().width, mainWindow.getLocation().y);
@@ -180,45 +222,12 @@ public final class Client_Main implements ActionListener, Runnable
 		// Initialize Message Queue
 		msgQueue = new ArrayBlockingQueue<Message>(1);
 		
-		mainWindow.setTitle("Chat Room - " + user_id);
-		
 		// Start Receiving from Server
 		new Thread(this).start();
 		
 		// Open Main Window
 		mainWindow.setVisible(true);
 		System.out.println("client is up");
-	}
-	
-	private void updateUserList()
-	{
-		if (onlineUsers == null || offlineUsers == null)
-		{
-			new Client_Error(dim, "Failed Updating User List", user_id);
-			return;
-		}
-		
-		Set<Integer> onlineKeys = onlineUsers.keySet();
-		Set<Integer> offlineKeys = offlineUsers.keySet();
-		String[] onlineArray = new String[onlineKeys.size()];
-		String[] offlineArray = new String[offlineKeys.size()];
-		int i = 0;
-		for (int key : onlineKeys)
-		{
-			if (key == user_id) onlineArray[i] = onlineUsers.get(key) + " (ID: " + key + ", me)";
-			else onlineArray[i] = onlineUsers.get(key) + " (ID: " + key + ")";
-			i++;
-		}
-		i = 0;
-		for (int key : offlineKeys)
-		{
-			offlineArray[i] = offlineUsers.get(key) + " (ID: " + key + ")";
-			i++;
-		}
-		Arrays.sort(onlineArray);
-		Arrays.sort(offlineArray);
-		onlineList.setListData(onlineArray);
-		offlineList.setListData(offlineArray);
 	}
 	
 	@Override
@@ -231,6 +240,28 @@ public final class Client_Main implements ActionListener, Runnable
 		{
 			onlineList.clearSelection();
 			offlineList.clearSelection();
+		} else if (ae.getSource() == sendButton || ae.getSource() == messageTextField)
+		{
+			String msgStr = messageTextField.getText();
+			if (msgStr.isBlank()) return;
+			Message msg;
+			if (onlineList.isSelectionEmpty() && offlineList.isSelectionEmpty())
+			{
+				msg = new Message(msgStr, user_id, (int[]) null);
+			} else
+			{
+// To be implemented, Include self as recipient
+				msg = new Message(msgStr, user_id, new int[]{user_id});
+			}
+			try
+			{
+				oos.writeObject(msg);
+			} catch (IOException e)
+			{
+				new Client_Error(dim, "Failed to Send Message, Please Try Again." + e.toString(), user_id);
+				return;
+			}
+			messageTextField.setText("");
 		}
 		
 	}
@@ -242,7 +273,6 @@ public final class Client_Main implements ActionListener, Runnable
 
 		while (true)
 		{
-			String newLine = System.lineSeparator();
 			Message msg;
 			try
 			{
@@ -262,8 +292,12 @@ public final class Client_Main implements ActionListener, Runnable
 			switch (msgType)
 			{
 			case MESSAGE:
-				messagTextArea.append(newLine + msg.getMsg() + " -" + new Date(msg.getTime()));
-				messagTextArea.setCaretPosition(messagTextArea.getDocument().getLength());
+				int[] recipients = msg.getRecipients();
+				String reciStr = (recipients == null) ? "Everyone" : Arrays.toString(recipients);
+				String msgStr = newLine + " -" + new Date(msg.getTime()) + "- " + newLine + 
+								getNickName(msg.getUser_id()) + " (To: " + reciStr + "): " + msg.getMsg() + newLine;
+				messageTextArea.append(msgStr);
+				messageTextArea.setCaretPosition(messageTextArea.getDocument().getLength());
 				break;
 			case USER_LIST:
 				this.onlineUsers = msg.getOnlineUsers();
@@ -293,6 +327,43 @@ public final class Client_Main implements ActionListener, Runnable
 		}
 	}
 	
+	private void updateUserList()
+	{
+		if (onlineUsers == null || offlineUsers == null)
+		{
+			new Client_Error(dim, "Failed Updating User List", user_id);
+			return;
+		}
+		
+		Set<Integer> onlineKeys = onlineUsers.keySet();
+		Set<Integer> offlineKeys = offlineUsers.keySet();
+		String[] onlineArray = new String[onlineKeys.size()];
+		String[] offlineArray = new String[offlineKeys.size()];
+		int i = 0;
+		for (int key : onlineKeys)
+		{
+			if (key == user_id) 
+			{
+				String myNickName = onlineUsers.get(key);
+				nick_name = myNickName;
+				mainWindow.setTitle("Chat Room - " + user_id + ": " + nick_name);
+				onlineArray[i] = myNickName + " (ID: " + key + ", me)";
+			}
+			else onlineArray[i] = onlineUsers.get(key) + " (ID: " + key + ")";
+			i++;
+		}
+		i = 0;
+		for (int key : offlineKeys)
+		{
+			offlineArray[i] = offlineUsers.get(key) + " (ID: " + key + ")";
+			i++;
+		}
+		Arrays.sort(onlineArray);
+		Arrays.sort(offlineArray);
+		onlineList.setListData(onlineArray);
+		offlineList.setListData(offlineArray);
+	}
+	
 // Check Message Type
 	/**
 	 * Check incoming {@code Object} type, return {@code Message} type if it is in this type.
@@ -309,6 +380,13 @@ public final class Client_Main implements ActionListener, Runnable
 		{
 			throw new ClassNotFoundException("Invalid Object Type from Server");
 		}
+	}
+	
+	public String getNickName(int user_id)
+	{
+		String nickName = onlineUsers.get(user_id);
+		if (nickName == null) nickName = offlineUsers.get(user_id);
+		return nickName;
 	}
 	
 	public String getMyInfo() throws IOException, InterruptedException

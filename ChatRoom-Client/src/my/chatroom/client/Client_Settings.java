@@ -51,6 +51,7 @@ public class Client_Settings implements ActionListener
 		resetPanel.setLayout(new GridLayout(10, 1));
 		resetPanel.setBackground(Color.LIGHT_GRAY);
 		
+		resetPanel.add(myInfoButton);
 		resetPanel.add(new JLabel("Set New Nick Name: "));
 		resetPanel.add(nickNameTextField);
 		resetPanel.add(nickNameButton);
@@ -60,7 +61,6 @@ public class Client_Settings implements ActionListener
 		resetPanel.add(newPw1Field);
 		resetPanel.add(newPw2Field);
 		resetPanel.add(passwordButton);
-		resetPanel.add(myInfoButton);
 		
 		infoTextArea.setBackground(Color.LIGHT_GRAY);
 		infoTextArea.setEditable(false);
