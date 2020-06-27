@@ -101,6 +101,7 @@ public final class Client_Login implements ActionListener
 		loginWindow.setLocation(dim.width/2-loginWindow.getSize().width/2, dim.height/2-loginWindow.getSize().height/2);
 		loginWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		loginWindow.setVisible(true);
+		loginWindow.getRootPane().setDefaultButton(loginButton);
 	}
 
 	@Override

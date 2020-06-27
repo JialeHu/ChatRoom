@@ -1,6 +1,5 @@
 package my.chatroom.server;
 
-import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -49,7 +48,7 @@ public class Server_DB
 	 * Constructs database server, loads DB driver, connects to DB, retrieves users data and messages data.
 	 * @throws FatalDataBaseException if error occurs when loading DB and retrieving initial data.
 	 */
-	public Server_DB() throws FatalDataBaseException
+	public Server_DB(String DBpath) throws FatalDataBaseException
 	{
 		System.out.println("Server_DB: Initializing Server_DB ...");
 		
@@ -58,7 +57,7 @@ public class Server_DB
 		try
 		{
 			Class.forName("com.ibm.db2j.jdbc.DB2jDriver");
-			connection = DriverManager.getConnection("jdbc:db2j:" + new File("").getAbsolutePath().concat("/database/QuoteDB"));
+			connection = DriverManager.getConnection("jdbc:db2j:" + DBpath);
 		} catch (ClassNotFoundException e)
 		{
 			System.err.println("Server_DB: - Failed to load db2j. " + e.getMessage());

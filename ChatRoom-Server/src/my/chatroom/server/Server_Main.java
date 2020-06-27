@@ -1,6 +1,7 @@
 package my.chatroom.server;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -55,11 +56,11 @@ public class Server_Main implements Runnable
 	 * @param socketPort four-digit socket port number
 	 * @throws FatalDataBaseException if Server_DB encounters fatal error when loading
 	 */
-	public Server_Main(int socketPort) throws FatalDataBaseException
+	public Server_Main(String DBpath, int socketPort) throws FatalDataBaseException
 	{
 		// Load Server_DB
 		System.out.println("Server_Main: Loading Server_DB ...");
-		this.dbServer = new Server_DB();
+		this.dbServer = new Server_DB(DBpath);
 		
 		// Load Users Lists from DB
 		System.out.println("Server_Main: Loading Users ...");
@@ -730,7 +731,7 @@ public class Server_Main implements Runnable
 		try
 		{
 			System.out.println("Main Loader: Loading Server_Main ...");
-			Server_Main server = new Server_Main(1111);
+			Server_Main server = new Server_Main(new File("").getAbsolutePath().concat("/database/QuoteDB"), 1111);
 			
 			// Assign lower priority to Main thread (Checking shutdown request only)
 			Thread.currentThread().setPriority(Thread.MIN_PRIORITY);

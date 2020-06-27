@@ -18,7 +18,7 @@ public class Client_Loader implements ActionListener
 
 	private JFrame		loaderWindow		= new JFrame("Chat Room - Setting Networks");
 	private JTextField	serverAddrTextField	= new JTextField("localhost");
-	private JTextField	serverPortTestField	= new JTextField("1111");
+	private JTextField	serverPortTextField	= new JTextField("1111");
 	private JButton		nextButton			= new JButton("Next");
 	private Dimension	dim = Toolkit.getDefaultToolkit().getScreenSize();
 
@@ -34,7 +34,7 @@ public class Client_Loader implements ActionListener
 		panel.add(addrLabel);
 		panel.add(serverAddrTextField);
 		panel.add(portLabel);
-		panel.add(serverPortTestField);
+		panel.add(serverPortTextField);
 		
 		nextButton.addActionListener(this);
 		
@@ -58,7 +58,7 @@ public class Client_Loader implements ActionListener
 				return;
 			}
 			try {
-				int portNum = Integer.parseInt(serverPortTestField.getText().trim());
+				int portNum = Integer.parseInt(serverPortTextField.getText().trim());
 				new Client_Main(serverAddress, portNum);
 				loaderWindow.dispatchEvent(new WindowEvent(loaderWindow, WindowEvent.WINDOW_CLOSING));
 			} catch (Exception e)
