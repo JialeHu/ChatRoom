@@ -26,7 +26,6 @@ public class Message implements Serializable
 	private final int[] recipients;
 	private HashMap<Integer, String> onlineUsers = null;
 	private HashMap<Integer, String> offlineUsers = null;
-//	private Object obj = null;
 	private MsgType msgType = MsgType.MESSAGE;
 
 // Constructor

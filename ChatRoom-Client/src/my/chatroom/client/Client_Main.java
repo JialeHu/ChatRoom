@@ -79,7 +79,7 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 	private String		newLine		= System.lineSeparator();
 
 // Constructor
-	private Client_Main(String serverAddress, int serverPort)
+	public Client_Main(String serverAddress, int serverPort)
 	{
 		// Setup System Info
 		try
@@ -533,7 +533,6 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 		}
 		return pw1;
 	}
-	
 	
 // main() Loader
 	public static void main(String[] args)

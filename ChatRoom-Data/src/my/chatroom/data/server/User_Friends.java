@@ -2,21 +2,18 @@ package my.chatroom.data.server;
 
 import java.util.*;
 
-public class ChatUser extends User
+public class User_Friends extends User
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	
 	private Vector<Integer> friends;
 
-	public ChatUser() throws Exception
+	public User_Friends() throws Exception
 	{
 		super();
 	}
 
-	public ChatUser(String nick_name, String password) throws Exception
+	public User_Friends(String nick_name, String password) throws Exception
 	{
 		super(nick_name, password);
 	}
