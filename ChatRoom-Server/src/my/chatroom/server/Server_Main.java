@@ -662,12 +662,16 @@ public class Server_Main implements Runnable
 		
 		// Save Only messages for offline users
 		if (msg.getMsgType() != MsgType.MESSAGE) return;
+		System.out.println("Server_Main: Saving Messages for Each User: [ID]");
+		System.out.print("[");
 		for (int id : offlineUsers)
 		{
 			savedMessages.get(id).add(msg);
+			System.out.print(id + " ");
 		}
-		System.out.println("Server_Main: Saved Messages for Each User: {ID=[MsgQueue]}");
-		System.out.println(savedMessages);
+		System.out.println("] Saved");
+//		System.out.println("Server_Main: Saved Messages for Each User: {ID=[MsgQueue]}");
+//		System.out.println(savedMessages);
 	}
 	
 // Send To

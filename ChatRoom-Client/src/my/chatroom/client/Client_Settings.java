@@ -21,25 +21,27 @@ import my.chatroom.data.trans.MsgType;
 
 public class Client_Settings implements ActionListener
 {
-	private Client_Main mainClient;
-	private Dimension dim;
-	private int user_id;
+	// User Info
+	private Client_Main	mainClient;
+	private Dimension	dim;
+	private int			user_id;
 
-	private JFrame 	settingsWindow		= new JFrame("Chat Room - Settings"); 
-	private JButton	myInfoButton		= new JButton("Get My Information");
-	private JPanel  resetPanel       	= new JPanel();
-	private JTextField nickNameTextField = new JTextField();
-	private JButton	nickNameButton		= new JButton("Set My Nick Name");
-	private JPasswordField oldPwField	= new JPasswordField();
-	private JPasswordField newPw1Field	= new JPasswordField();
-	private JPasswordField newPw2Field 	= new JPasswordField();
-	private JButton passwordButton		= new JButton("Set New Password");
-	private JButton removeButton		= new JButton("Delete My Account");
-	private JButton removeButton2		= new JButton("Confirm Delete My Account");
-	private JButton	backButton			= new JButton("Back to Settings");
-	private JTextArea infoTextArea	= new JTextArea();
+	// Settings GUI Objects
+	private JFrame			settingsWindow		= new JFrame("Chat Room - Settings"); 
+	private JButton			myInfoButton		= new JButton("Get My Information");
+	private JTextArea		infoTextArea		= new JTextArea();
+	private JPanel			resetPanel			= new JPanel();
+	private JTextField		nickNameTextField	= new JTextField();
+	private JButton			nickNameButton		= new JButton("Set My Nick Name");
+	private JPasswordField	oldPwField			= new JPasswordField();
+	private JPasswordField	newPw1Field			= new JPasswordField();
+	private JPasswordField	newPw2Field			= new JPasswordField();
+	private JButton			passwordButton		= new JButton("Set New Password");
+	private JButton			removeButton		= new JButton("Delete My Account");
+	private JButton			removeButton2		= new JButton("Confirm Delete My Account");
+	private JButton			backButton			= new JButton("Back to Settings");
 	
-	
+// Constructor
 	public Client_Settings(Client_Main main, Dimension dim, int user_id)
 	{
 		this.mainClient = main;
@@ -65,27 +67,7 @@ public class Client_Settings implements ActionListener
 		infoTextArea.setBackground(Color.LIGHT_GRAY);
 		infoTextArea.setEditable(false);
 		
-//		nickNameTextField.setBackground(Color.LIGHT_GRAY);
-//		oldPwField.setBackground(Color.LIGHT_GRAY);
-//		newPw1Field.setBackground(Color.LIGHT_GRAY);
-//		newPw2Field.setBackground(Color.LIGHT_GRAY);
-		
-//		myInfoButton.setOpaque(true);
-//		myInfoButton.setBackground(Color.DARK_GRAY);
-//		myInfoButton.setForeground(Color.WHITE);
-//		nickNameButton.setOpaque(true);
-//		nickNameButton.setBackground(Color.DARK_GRAY);
-//		nickNameButton.setForeground(Color.WHITE);
-//		passwordButton.setOpaque(true);
-//		passwordButton.setBackground(Color.DARK_GRAY);
-//		passwordButton.setForeground(Color.WHITE);
-//		removeButton.setOpaque(true);
-//		removeButton.setBackground(Color.DARK_GRAY);
-//		removeButton.setForeground(Color.WHITE);
-//		backButton.setOpaque(true);
-//		backButton.setBackground(Color.DARK_GRAY);
-//		backButton.setForeground(Color.WHITE);
-		
+		// Add Listeners
 		myInfoButton.addActionListener(this);
 		nickNameButton.addActionListener(this);
 		passwordButton.addActionListener(this);
@@ -93,24 +75,24 @@ public class Client_Settings implements ActionListener
 		removeButton2.addActionListener(this);
 		backButton.addActionListener(this);
 		
+		// Load Main Settings Window
+		loadMain();
+		
 		// Set Window
 		settingsWindow.setSize(300,400);
 		settingsWindow.setResizable(false);
 		settingsWindow.setLocation(dim.width/2-settingsWindow.getSize().width/2, dim.height/2-settingsWindow.getSize().height/2);
 		settingsWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-		
-		loadMain();
-		
 		settingsWindow.setVisible(true);
 	}
 	
 	@Override
 	public void actionPerformed(ActionEvent ae)
 	{
-		if (ae.getSource() == backButton) 
+		if (ae.getSource() == backButton) // Back to Main Window
 		{
 			loadMain();
-		} else if (ae.getSource() == myInfoButton)
+		} else if (ae.getSource() == myInfoButton) // Show myInfo Window
 		{
 			try
 			{
@@ -121,7 +103,7 @@ public class Client_Settings implements ActionListener
 				new Client_Error(dim, "Error Occured When Fetching Data, Please Try Again. " + e.toString(), user_id);
 			}
 			
-		} else if (ae.getSource() == nickNameButton)
+		} else if (ae.getSource() == nickNameButton) // Set New Nick Name
 		{
 			String newNickName = mainClient.checkNickNameFormat(nickNameTextField.getText());
 			if (newNickName == null) return;
@@ -141,7 +123,7 @@ public class Client_Settings implements ActionListener
 				new Client_Error(dim, "Error Occured When Setting Nick Name, Please Try Again. " + e.toString(), user_id);
 			}
 			
-		} else if (ae.getSource() == passwordButton)
+		} else if (ae.getSource() == passwordButton) // Set New Password
 		{
 			String oldPw = new String(oldPwField.getPassword());
 			if (oldPw.isEmpty()) 
@@ -171,11 +153,11 @@ public class Client_Settings implements ActionListener
 				new Client_Error(dim, "Error Occured When Setting Password, Please Try Again. " + e.toString(), user_id);
 			}
 			
-		} else if (ae.getSource() == removeButton)
+		} else if (ae.getSource() == removeButton) // Delete User Account
 		{
 			loadRemove();
 			
-		} else if (ae.getSource() == removeButton2)
+		} else if (ae.getSource() == removeButton2) // Confirm Deleting User Account
 		{
 			try
 			{
@@ -196,6 +178,7 @@ public class Client_Settings implements ActionListener
 		
 	}
 	
+// Load Main Settings Window
 	private void loadMain()
 	{
 		settingsWindow.getContentPane().removeAll();
@@ -207,6 +190,7 @@ public class Client_Settings implements ActionListener
 		settingsWindow.getContentPane().repaint();
 	}
 	
+// Load myInfo Window
 	private void loadInfo(String info)
 	{
 		settingsWindow.getContentPane().removeAll();
@@ -222,6 +206,7 @@ public class Client_Settings implements ActionListener
 		settingsWindow.getContentPane().repaint();
 	}
 	
+// Load Confirm Deleting Account Window
 	private void loadRemove()
 	{
 		settingsWindow.getContentPane().removeAll();

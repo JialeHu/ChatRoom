@@ -17,37 +17,37 @@ import my.chatroom.data.trans.*;
 
 public final class Client_Login implements ActionListener
 {
-// Instance Variables
-	private Client_Main mainClient;
-	private Dimension dim;
-	private Socket s;
-	private ObjectOutputStream oos;
-	private ObjectInputStream ois;
+	// Connection
+	private Client_Main			mainClient;
+	private Dimension			dim;
+	private Socket				s;
+	private ObjectOutputStream	oos;
+	private ObjectInputStream	ois;
 	
-	// Login GUI objects
+	// Login User Info
+	private int		user_id;
+	private String	password;
+	
+	// Login GUI Objects
 	private JFrame loginWindow = new JFrame("Chat Room - Welcome");
 	
 	private JTextArea		logInTextArea		= new JTextArea("Welcome to Chat Room");
-	private JButton  		loginButton 		= new JButton("Log In");
-	private JPanel      	loginPanel       	= new JPanel();
-	private JPanel      	buttonPanel       	= new JPanel();
-	private JTextField		user_idTextField 	= new JTextField();
-	private JPasswordField	passwordTextField 	= new JPasswordField();
-	private JButton  		newUserButton 		= new JButton("New User? Sign Up");
+	private JPanel			loginPanel			= new JPanel();
+	private JTextField		user_idTextField	= new JTextField();
+	private JPasswordField	passwordTextField	= new JPasswordField();
+	private JPanel			buttonPanel			= new JPanel();
+	private JButton			loginButton			= new JButton("Log In");
+	private JButton			newUserButton		= new JButton("New User? Sign Up");
 	
-//	private JTextArea		signUpTextArea		= new JTextArea("Please Enter Your Nick Name, Then Enter Password Twice:");
 	private JButton			backButton			= new JButton("Back to Log In");
-	private JButton  		signUpButton 		= new JButton("Sign Up");
-	private JPanel      	signUpPanel       	= new JPanel();
-	private JTextField		nickNameTextField 	= new JTextField();
-	private JPasswordField	newPw1Field 		= new JPasswordField();
-	private JPasswordField	newPw2Field 		= new JPasswordField();
+	private JPanel			signUpPanel			= new JPanel();
+	private JTextField		nickNameTextField	= new JTextField();
+	private JPasswordField	newPw1Field			= new JPasswordField();
+	private JPasswordField	newPw2Field			= new JPasswordField();
+	private JButton			signUpButton		= new JButton("Sign Up");
 	private JTextArea		newUserTextArea		= new JTextArea();
 	
-	// Login Info
-	private int user_id;
-	private String password;
-	
+// Constructor
 	public Client_Login(Client_Main mainClient, Dimension dim, String serverAddress, int serverPort)
 	{
 		this.mainClient = mainClient;
@@ -63,7 +63,7 @@ public final class Client_Login implements ActionListener
 			return;
 		}
 		
-		// Set Components
+		// Setup Panels
 		loginPanel.setLayout(new GridLayout(4, 1));
 		loginPanel.add(new JLabel("Enter Your User ID: "));
 		loginPanel.add(user_idTextField);
@@ -81,21 +81,21 @@ public final class Client_Login implements ActionListener
 		signUpPanel.add(newPw1Field);
 		signUpPanel.add(newPw2Field);
 		
+		// Setup Text Area
 		logInTextArea.setEditable(false);
 		logInTextArea.setEnabled(false);
-//		signUpTextArea.setEditable(false);
-//		signUpTextArea.setEnabled(false);
-//		signUpTextArea.setLineWrap(true);
-//		signUpTextArea.setWrapStyleWord(true);
 		newUserTextArea.setEditable(false);
-		// Load LogIn Panel
-		loadLogIn();
+		
 		// Add Listener
 		loginButton.addActionListener(this);
 		newUserButton.addActionListener(this);
 		backButton.addActionListener(this);
 		signUpButton.addActionListener(this);
-		// Set Window
+		
+		// Load Main Login Window
+		loadLogin();
+		
+		// Set Main Window
 		loginWindow.setSize(300,300);
 		loginWindow.setResizable(false);
 		loginWindow.setLocation(dim.width/2-loginWindow.getSize().width/2, dim.height/2-loginWindow.getSize().height/2);
@@ -118,13 +118,14 @@ public final class Client_Login implements ActionListener
 				user_id = Integer.parseInt(user_idTextField.getText().trim());
 			} catch (Exception e)
 			{
-				new Client_Error(dim, "Invalid User ID " + e.getMessage() + " ID Must be Number");
+				new Client_Error(dim, "Invalid User ID " + e.getMessage() + " ID Must be Numbers");
 				return;
 			}
 			password = new String(passwordTextField.getPassword());
 			
 			System.out.println(user_id + " " + password);
 			
+			// Send JOIN Message to Server
 			String nickName;
 			Message joinMsg = new Message(password, user_id, MsgType.JOIN);
 			try
@@ -159,17 +160,17 @@ public final class Client_Login implements ActionListener
 				return;
 			}
 			
-			// Wake Up Caller
+			// Load Main Chat Room
 			mainClient.loggedIn(s, oos, ois, user_id, nickName);
 			// Close Self
 			loginWindow.dispatchEvent(new WindowEvent(loginWindow, WindowEvent.WINDOW_CLOSING));
 			
-		} else if (ae.getSource() == newUserButton) // Load SignUp Panel
+		} else if (ae.getSource() == newUserButton) // Load Sign Up Panel
 		{
 			loadSignUp();
-		} else if (ae.getSource() == backButton) // Load LogIn Panel
+		} else if (ae.getSource() == backButton) // Load Login Panel
 		{
-			loadLogIn();
+			loadLogin();
 		} else if (ae.getSource() == signUpButton) // Sign Up processing
 		{
 			String nick_name = nickNameTextField.getText().trim();
@@ -185,6 +186,7 @@ public final class Client_Login implements ActionListener
 			
 			System.out.println(nick_name + " " + pw1 + " " + pw2);
 			
+			// Send ADD_USER Message to Server
 			Message joinMsg = new Message(nick_name + " " + pw, 0, MsgType.ADD_USER);
 			try
 			{
@@ -199,6 +201,9 @@ public final class Client_Login implements ActionListener
 					case DONE:
 						System.out.println("Sign Up Succeeded");
 						user_id = ((Message) reply).getUser_id();
+						nickNameTextField.setText("");
+						newPw1Field.setText("");
+						newPw2Field.setText("");
 						loadNewUser();
 						break;
 					case REFUSE:
@@ -222,18 +227,22 @@ public final class Client_Login implements ActionListener
 		
 	}
 	
-	private void loadLogIn()
+// Load Login Window
+	private void loadLogin()
 	{
 		loginWindow.getContentPane().removeAll();
 		
 		loginWindow.getContentPane().add(logInTextArea, "North");
 		loginWindow.getContentPane().add(loginPanel, "Center");
 		loginWindow.getContentPane().add(buttonPanel,"South");
+		// Preload user_id
+		if (user_id != 0) user_idTextField.setText(String.valueOf(user_id));
 		
 		loginWindow.revalidate();
 		loginWindow.getContentPane().repaint();
 	}
 	
+// Load Sign Up Window
 	private void loadSignUp()
 	{
 		loginWindow.getContentPane().removeAll();
@@ -246,6 +255,7 @@ public final class Client_Login implements ActionListener
 		loginWindow.getContentPane().repaint();
 	}
 	
+// Load New User Window
 	private void loadNewUser()
 	{
 		loginWindow.getContentPane().removeAll();
@@ -260,10 +270,10 @@ public final class Client_Login implements ActionListener
 		loginWindow.getContentPane().repaint();
 	}
 	
-	// Save Login info on disk
+// Save Login info on disk
 //	private void saveToDisk()
 //	{
-//		
+//		// Save User ID and Password
 //	}
 
 }
