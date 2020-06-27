@@ -9,8 +9,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import my.chatroom.data.trans.Message;
-import my.chatroom.data.trans.MsgType;
+import my.chatroom.data.messages.Message;
+import my.chatroom.data.messages.MsgType;
 
 public class JSON_Utility
 {

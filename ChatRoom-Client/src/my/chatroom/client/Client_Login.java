@@ -13,7 +13,7 @@ import java.net.Socket;
 
 import javax.swing.*;
 
-import my.chatroom.data.trans.*;
+import my.chatroom.data.messages.*;
 
 public final class Client_Login implements ActionListener
 {
@@ -101,7 +101,6 @@ public final class Client_Login implements ActionListener
 		loginWindow.setLocation(dim.width/2-loginWindow.getSize().width/2, dim.height/2-loginWindow.getSize().height/2);
 		loginWindow.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 		loginWindow.setVisible(true);
-		loginWindow.getRootPane().setDefaultButton(loginButton);
 	}
 
 	@Override
@@ -239,6 +238,8 @@ public final class Client_Login implements ActionListener
 		// Preload user_id
 		if (user_id != 0) user_idTextField.setText(String.valueOf(user_id));
 		
+		loginWindow.getRootPane().setDefaultButton(loginButton);
+		
 		loginWindow.revalidate();
 		loginWindow.getContentPane().repaint();
 	}
@@ -251,6 +252,8 @@ public final class Client_Login implements ActionListener
 		loginWindow.getContentPane().add(backButton,"North");
 		loginWindow.getContentPane().add(signUpPanel, "Center");
 		loginWindow.getContentPane().add(signUpButton,"South");
+		
+		loginWindow.getRootPane().setDefaultButton(signUpButton);
 		
 		loginWindow.revalidate();
 		loginWindow.getContentPane().repaint();

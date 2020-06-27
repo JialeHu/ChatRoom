@@ -16,8 +16,8 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
-import my.chatroom.data.trans.Message;
-import my.chatroom.data.trans.MsgType;
+import my.chatroom.data.messages.Message;
+import my.chatroom.data.messages.MsgType;
 
 public class Client_Settings implements ActionListener
 {

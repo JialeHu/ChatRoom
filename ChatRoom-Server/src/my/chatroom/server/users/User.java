@@ -1,4 +1,4 @@
-package my.chatroom.data.server;
+package my.chatroom.server.users;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.sql.SQLException;
+
+import my.chatroom.server.Server_DB;
 
 /**
  * 
@@ -60,6 +63,14 @@ public class User implements Serializable
 	public User(String nick_name, String password) throws Exception
 	{
 		this();
+		this.nick_name = nick_name;
+		this.password = password;
+	}
+	
+	public User(Server_DB dbServer, String nick_name, String password) throws SQLException
+	{
+		this.user_id = dbServer.getNextUserID();
+		this.signUpTime = System.currentTimeMillis();
 		this.nick_name = nick_name;
 		this.password = password;
 	}

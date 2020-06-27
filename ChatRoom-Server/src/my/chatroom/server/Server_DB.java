@@ -11,9 +11,9 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 
 import my.chatroom.data.json.JSON_Utility;
-import my.chatroom.data.server.*;
-import my.chatroom.data.trans.Message;
+import my.chatroom.data.messages.Message;
 import my.chatroom.server.exception.FatalDataBaseException;
+import my.chatroom.server.users.*;
 
 /**
  * Database server interfacing with DB2 from IBM, providing API for main Server program.
@@ -280,16 +280,33 @@ public class Server_DB
 		return usersMap.containsKey(user_id);
 	}
 	
+// Get Next User ID
+	/**
+	 * Get next available user id from DB.
+	 * @return next user id, or -1 if failed
+	 * @throws SQLException if DB query failed
+	 */
+	public int getNextUserID() throws SQLException
+	{
+		ResultSet rs = selectAllStmt.executeQuery("SELECT * FROM USERS WHERE USER_ID = (SELECT MAX(USER_ID) FROM USERS)");
+		if (rs.next()) return rs.getInt("USER_ID") + 1;
+		return -1;
+	}
+	
 // Add User
 	/**
 	 * Add a new user to DB.
 	 * @param user {@code User} to be added
 	 * @return {@code true} if added successfully
 	 */
-	public synchronized boolean addUser(User user)
+	public synchronized User addUser(String nick_name, String password)
 	{
+		User user;
 		try
 		{
+			user = new User(this, nick_name, password);
+			if (user.getUser_id() < 1) user = null;
+			
 			insertStmtUSERS.setInt(1, user.getUser_id());
 			insertStmtUSERS.setLong(2, user.getSignUpTime());
 			insertStmtUSERS.setString(3, user.getNick_name());
@@ -297,13 +314,14 @@ public class Server_DB
 			insertStmtUSERS.executeUpdate();
 		} catch (SQLException e)
 		{
-			System.err.println("Server_DB: - Failed to add user to DB. " + user + e.getMessage());
-			return false;
-		}
+			System.err.println("Server_DB: - Failed to add user to DB. " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		} 
 		
 		usersMap.put(user.getUser_id(), user);
 		System.out.println("Server_DB: User Added to DB: " + user);
-		return true;
+		return user;
 	}
 
 // Remove User

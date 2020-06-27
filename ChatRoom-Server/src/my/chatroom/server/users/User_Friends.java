@@ -1,4 +1,4 @@
-package my.chatroom.data.server;
+package my.chatroom.server.users;
 
 import java.util.*;
 

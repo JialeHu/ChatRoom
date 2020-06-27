@@ -27,7 +27,7 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
-import my.chatroom.data.trans.*;
+import my.chatroom.data.messages.*;
 
 public final class Client_Main implements ActionListener, ListSelectionListener, FocusListener, Runnable
 {
@@ -133,7 +133,9 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 		
 		onlineScrollPane.setBackground(leftPanelBackgroundColor);
 		onlineScrollPane.getVerticalScrollBar().setBackground(leftPanelBackgroundColor);
+		onlineScrollPane.getVerticalScrollBar().setOpaque(true);
 		onlineScrollPane.getHorizontalScrollBar().setBackground(leftPanelBackgroundColor);
+		onlineScrollPane.getHorizontalScrollBar().setOpaque(true);
 		
 		onlineList.setBackground(leftPanelBackgroundColor);
 		onlineList.setForeground(Color.LIGHT_GRAY);
@@ -148,7 +150,9 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 		
 		offlineScrollPane.setBackground(leftPanelBackgroundColor);
 		offlineScrollPane.getVerticalScrollBar().setBackground(leftPanelBackgroundColor);
+		offlineScrollPane.getVerticalScrollBar().setOpaque(true);
 		offlineScrollPane.getHorizontalScrollBar().setBackground(leftPanelBackgroundColor);
+		offlineScrollPane.getHorizontalScrollBar().setOpaque(true);
 		
 		offlineList.setBackground(leftPanelBackgroundColor);
 		offlineList.setForeground(Color.LIGHT_GRAY);

@@ -3,8 +3,8 @@ package my.chatroom.data.json;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import my.chatroom.data.trans.Message;
-import my.chatroom.data.trans.MsgType;
+import my.chatroom.data.messages.Message;
+import my.chatroom.data.messages.MsgType;
 
 public class JSON_Test
 {

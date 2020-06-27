@@ -1,4 +1,4 @@
-package my.chatroom.data.trans;
+package my.chatroom.data.messages;
 
 import java.io.Serializable;
 import java.util.Arrays;

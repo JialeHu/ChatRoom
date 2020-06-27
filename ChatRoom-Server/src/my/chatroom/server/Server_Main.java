@@ -23,9 +23,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import my.chatroom.data.server.*;
-import my.chatroom.data.trans.*;
+import my.chatroom.data.messages.*;
 import my.chatroom.server.exception.*;
+import my.chatroom.server.users.*;
 
 /**
  * Main server program of ChatRoom server,
@@ -264,10 +264,11 @@ public class Server_Main implements Runnable
 					}
 					break;
 				case ADD_USER:
-					if (user_id != 0)
+					if (user_id > 0)
 					{
 						System.out.println("Server_Main: - Wrong first message enum type: ADD_USER from " 
 											+ clientAddress + " Session terminated");
+						oos.close();
 						return;
 					}
 					String msg = ((Message) joinMsg).getMsg();
@@ -283,7 +284,7 @@ public class Server_Main implements Runnable
 							e.printStackTrace();
 						}
 						System.out.println("Server_Main: - Invalid Nick Name from " + clientAddress);
-						return;
+						break;
 					} else if (msg.length()-blankOffset < 6 || msg.length()-blankOffset >= 50)
 					{
 						// Invalid password
@@ -295,12 +296,12 @@ public class Server_Main implements Runnable
 						{
 							e.printStackTrace();
 						}
-						return;
+						break;
 					}
 					String nick_name = msg.substring(0,blankOffset);
 					String password = msg.substring(blankOffset+1);
 					user_id = addUser(nick_name, password);
-					if (user_id == 0)
+					if (user_id < 0)
 					{
 						System.out.println("Server_Main: - Create user failed for " + clientAddress);
 						try
@@ -310,7 +311,7 @@ public class Server_Main implements Runnable
 						{
 							e.printStackTrace();
 						}
-						return;
+						break;
 					}
 					// Update Users Lists
 					offlineUsers.add(user_id);
@@ -329,6 +330,7 @@ public class Server_Main implements Runnable
 				default:
 					System.out.println("Server_Main: - Unexpected message enum type: " + msgType + " from " 
 										+ clientAddress + " Session terminated");
+					oos.close();
 					return;
 				}
 				// Wait for join message again
@@ -600,25 +602,20 @@ public class Server_Main implements Runnable
 	 * Add a new user to server and database.
 	 * @param nick_name nick name of user
 	 * @param password password for login
-	 * @return new user id, or 0 if failed adding user
+	 * @return new user id, or -1 if failed adding user
 	 */
 	private int addUser(String nick_name, String password)
 	{
-		try
+		User user = dbServer.addUser(nick_name, password);
+		if (user == null) 
 		{
-			User user = new User(nick_name, password);
-			if (dbServer.addUser(user))
-			{
-				int user_id = user.getUser_id();
-				savedMessages.put(user_id, (Queue<Message>) new LinkedList<Message>());
-				dbServer.saveAllMessages();
-				return user_id;
-			}
-		} catch(Exception e)
-		{
-			System.out.println("Server_Main: - Error creating new user. " + e.getMessage());
+			System.out.println("Server_Main: - Error creating new user.");
+			return -1;
 		}
-		return 0;
+		int user_id = user.getUser_id();
+		savedMessages.put(user_id, (Queue<Message>) new LinkedList<Message>());
+		dbServer.saveAllMessages();
+		return user_id;
 	}
 // Send User List
 	/**

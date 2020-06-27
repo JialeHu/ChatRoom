@@ -4,7 +4,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-import my.chatroom.data.trans.*;
+import my.chatroom.data.messages.*;
 
 /**
  * 

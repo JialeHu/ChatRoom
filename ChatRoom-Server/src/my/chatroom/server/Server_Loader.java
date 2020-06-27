@@ -55,7 +55,7 @@ public class Server_Loader implements ActionListener
 	}
 	
 	private Dimension	dim = Toolkit.getDefaultToolkit().getScreenSize();
-	private JFrame		serverWindow	= new JFrame("ChatRoomServer");
+	private JFrame		serverWindow	= new JFrame("Chat Room Server");
 	
 	private JTextField	DBpathTextField	= new JTextField("/Users/hjl/git/ChatRoom/ChatRoom-Server/database/QuoteDB");
 	private JTextField 	portNumField	= new JTextField("1111");

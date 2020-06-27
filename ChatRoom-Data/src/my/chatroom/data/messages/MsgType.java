@@ -1,4 +1,4 @@
-package my.chatroom.data.trans;
+package my.chatroom.data.messages;
 
 /**
  * 
