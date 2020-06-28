@@ -69,7 +69,8 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 	private JPanel		chatPanel			= new JPanel();
 	private JTextArea	messageTextArea		= new JTextArea();
 	private JScrollPane	messageScrollPane	= new JScrollPane(messageTextArea);
-	private String		messageTextFieldStr	= "Send Messages to Everyone";
+	private String		messageTextFieldStr	= "Send Messages to Everyone"; // Instruction message
+	private String		messageTextStr		= ""; // User-typed message
 	private JTextField	messageTextField	= new JTextField(messageTextFieldStr);
 	private JButton		sendButton			= new JButton("Send");
 	
@@ -246,7 +247,7 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 			offlineList.clearSelection();
 		} else if (ae.getSource() == sendButton || ae.getSource() == messageTextField) // Send Message
 		{
-			String msgStr = messageTextField.getText();
+			String msgStr = messageTextStr;
 			if (msgStr.isBlank()) return;
 			Message msg;
 			if (onlineList.isSelectionEmpty() && offlineList.isSelectionEmpty()) // Public Messages
@@ -272,7 +273,8 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 				new Client_Error(dim, "Failed to Send Message, Please Try Again." + e.toString(), user_id);
 				return;
 			}
-			messageTextField.setText("");
+			messageTextStr = "";
+			messageTextField.setText(messageTextFieldStr);
 		}
 		
 	}
@@ -283,6 +285,9 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 	{
 		if (lse.getSource() == onlineList || lse.getSource() == offlineList) // Set instruction string on messageTextField
 		{
+			// Save User-typed message
+			if (!messageTextField.getText().equals(messageTextFieldStr)) messageTextStr = messageTextField.getText();
+			
 			if (onlineList.isSelectionEmpty() && offlineList.isSelectionEmpty()) // Public Messages
 			{
 				messageTextFieldStr = "Send Messages to Everyone";
@@ -313,7 +318,7 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 	{
 		if (fe.getSource() == messageTextField) // Text Field is Focused
 		{
-			messageTextField.setText("");
+			messageTextField.setText(messageTextStr);
 		}
 		
 	}
@@ -323,6 +328,8 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 	{
 		if (fe.getSource() == messageTextField) // Text Field Lost Focus
 		{
+			// Save User-typed message
+			if (!messageTextField.getText().equals(messageTextFieldStr)) messageTextStr = messageTextField.getText();
 			messageTextField.setText(messageTextFieldStr);
 		}
 		
