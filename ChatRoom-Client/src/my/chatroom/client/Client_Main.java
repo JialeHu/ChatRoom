@@ -542,7 +542,6 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 	public static void main(String[] args)
 	{
 		new Client_Main("localhost", 1111);
-		System.out.println("End of main loader");
 	}
 
 }
