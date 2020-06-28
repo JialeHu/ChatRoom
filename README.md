@@ -14,5 +14,15 @@ Implementations of chat room server and client that enable sending public or pri
 ## Quick Link
 - [Server Source Code](/ChatRoom-Server/src/my/chatroom/server)
 - [Client Source Code](/ChatRoom-Client/src/my/chatroom/client)
-- [Packaged JAR]()
+- [Packaged JAR](/JAR)
 ## Screenshots
+### Client
+![](/Screenshots/client.png)
+### Client Settings
+![](/Screenshots/settings.png)
+### Client Login
+![](/Screenshots/login.png)
+### Client SignUp
+![](/Screenshots/signup.png)
+### Server Console
+![](/Screenshots/server.png)
