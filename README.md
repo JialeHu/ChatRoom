@@ -16,13 +16,13 @@ Implementations of chat room server and client that enable sending public or pri
 - [Client Source Code](/ChatRoom-Client/src/my/chatroom/client)
 - [Packaged JAR](/JAR)
 ## Screenshots
-### Client
-![](/Screenshots/client.png)
-### Client Settings
-![](/Screenshots/settings.png)
-### Client Login
-![](/Screenshots/login.png)
-### Client SignUp
-![](/Screenshots/signup.png)
-### Server Console
-![](/Screenshots/server.png)
+<h3> Client <h3/>
+<img src="/Screenshots/client.png" width="600"/>
+<h3> Client Settings <h3/>
+<img src="/Screenshots/settings.png" width="300"/>
+<h3> Client Login <h3/>
+<img src="/Screenshots/login.png" width="300"/>
+<h3> Client SignUp <h3/>
+<img src="/Screenshots/signup.png" width="300"/>
+<h3> Server Console <h3/>
+<img src="/Screenshots/server.png" width="600"/>
