@@ -9,8 +9,8 @@ Implementations of chat room server and client that enable sending public or pri
 - Supports user info settings
 #### Dependency
 - JDK 13
-- org.json
-- org.json.simple
+- [org.json release 20200518](https://github.com/stleary/JSON-java)
+- [org.json.simple release 1_1_1](https://github.com/fangyidong/json-simple)
 ## Quick Link
 - [Server Source Code](/ChatRoom-Server/src/my/chatroom/server)
 - [Client Source Code](/ChatRoom-Client/src/my/chatroom/client)
