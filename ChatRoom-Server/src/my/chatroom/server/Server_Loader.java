@@ -27,7 +27,7 @@ public class Server_Loader implements ActionListener
 	{
 		private final JTextArea textArea;
 
-		public JTextAreaOutputStream (JTextArea textArea)
+		public JTextAreaOutputStream(JTextArea textArea)
 		{
 			if (textArea == null) throw new IllegalArgumentException ("Destination is null");
 			this.textArea = textArea;
@@ -36,13 +36,14 @@ public class Server_Loader implements ActionListener
 		@Override
 		public void write(byte[] buffer, int offset, int length) throws IOException
 		{
-			final String text = new String (buffer, offset, length);
+			final String text = new String(buffer, offset, length);
 			SwingUtilities.invokeLater(new Runnable ()
 			{
 				@Override
 				public void run() 
 				{
-					textArea.append (text);
+					textArea.append(text);
+					textArea.setCaretPosition(textArea.getDocument().getLength());
 				}
 			});
 		}
@@ -50,7 +51,7 @@ public class Server_Loader implements ActionListener
 		@Override
 		public void write(int b) throws IOException
 		{
-			write (new byte [] {(byte)b}, 0, 1);
+			write(new byte[]{(byte)b}, 0, 1);
 		}
 	}
 	
@@ -78,10 +79,15 @@ public class Server_Loader implements ActionListener
 		serverWindow.setLocation(dim.width/2-serverWindow.getSize().width/2, dim.height/2-serverWindow.getSize().height/2);
 		serverWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
+		textAreaScroll.setAutoscrolls(true);
+		textArea.setEditable(false);
+		errorAreaScroll.setAutoscrolls(true);
+		errorArea.setEditable(false);
 		JTextAreaOutputStream out = new JTextAreaOutputStream(textArea);
 		JTextAreaOutputStream err = new JTextAreaOutputStream(errorArea);
         System.setOut(new PrintStream(out));
         System.setErr(new PrintStream(err));
+        errorArea.setForeground(Color.RED);
         
         JPanel panel = new JPanel();
         JLabel DBpathLabel = new JLabel("DataBase Path:");
@@ -103,8 +109,6 @@ public class Server_Loader implements ActionListener
 	private void loadServerWindow()
 	{
 		serverWindow.getContentPane().removeAll();
-		serverWindow.revalidate();
-		serverWindow.getContentPane().repaint();
 		serverWindow.setSize(600,600);
 		
 		JPanel panel = new JPanel();
@@ -115,16 +119,10 @@ public class Server_Loader implements ActionListener
 		serverWindow.getContentPane().add(panel, "Center");
 		serverWindow.getContentPane().add(shutdownButton, "South");
 		
-		textAreaScroll.setAutoscrolls(true);
-		textArea.setEditable(false);
-		errorAreaScroll.setAutoscrolls(true);
-		errorArea.setEditable(false);
-		errorArea.setForeground(Color.RED);
-		
 		shutdownButton.addActionListener(this);
 		
 		serverWindow.revalidate();
-		serverWindow.getContentPane().repaint();
+		serverWindow.getContentPane().paintAll(serverWindow.getContentPane().getGraphics());
 		
 		try
 		{
