@@ -3,6 +3,7 @@ Implementations of chat room server and client that enable sending public or pri
 #### Server
 - Connects to Database (IBM DB2) via JDBC SQL
 - Serializes Data using JSON
+- Saves Messages for offline users
 - Utilizes Thread pool for communication with clients
 #### Client
 - GUIs with Swing
