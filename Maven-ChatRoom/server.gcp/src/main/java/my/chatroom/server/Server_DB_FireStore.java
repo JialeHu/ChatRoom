@@ -148,7 +148,7 @@ public class Server_DB_FireStore implements Server_DB_Interface
 			List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 			for (DocumentSnapshot document : documents)
 			{
-				IDs.add((Integer) document.get("user_id"));
+				IDs.add(((Long) document.get("user_id")).intValue());
 			}
 		} catch (InterruptedException | ExecutionException e)
 		{
