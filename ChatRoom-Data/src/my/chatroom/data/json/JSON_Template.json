@@ -1,7 +1,0 @@
-{
-    "msg":"message String",
-    "msgType":"MsgType Enum as String",
-    "user_id":int,
-    "recipients":int[],
-    "time":long
-}
