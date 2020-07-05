@@ -61,7 +61,7 @@ public class Server_DB_FireStore implements Server_DB_Interface
 			List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 			for (DocumentSnapshot document : documents)
 			{
-				int user_id = (int) document.get("user_id");
+				int user_id = ((Long) document.get("user_id")).intValue();
 				String msgs = document.getString("messages");
 				Queue<Message> queue = JSON_Utility.decodeMSGs(msgs);
 				savedMessages.put(user_id, queue);
@@ -219,7 +219,7 @@ public class Server_DB_FireStore implements Server_DB_Interface
 	{
 		Query query = db.collection("users").orderBy("user_id", Direction.DESCENDING).limit(1);
 		
-		int lastID = (int) query.get().get().getDocuments().get(0).get("user_id");
+		int lastID = ((Long) query.get().get().getDocuments().get(0).get("user_id")).intValue();
 		
 		return lastID + 1;
 	}
@@ -266,6 +266,7 @@ public class Server_DB_FireStore implements Server_DB_Interface
 		ApiFuture<QuerySnapshot> future = db.collection("users").whereEqualTo("user_id", user_id).get();
 		List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 		if (documents.size() > 1) throw new Exception("Got Multiple Documents for User ID: " + user_id);
+		if (documents.size() == 0) throw new Exception("No User ID: " + user_id);
 		return documents.get(0).getId();
 	}
 
