@@ -19,9 +19,6 @@ import com.google.cloud.firestore.Query.Direction;
 import com.google.cloud.firestore.QueryDocumentSnapshot;
 import com.google.cloud.firestore.QuerySnapshot;
 import com.google.cloud.firestore.WriteResult;
-//import com.google.firebase.FirebaseApp;
-//import com.google.firebase.FirebaseOptions;
-//import com.google.firebase.cloud.FirestoreClient;
 
 import my.chatroom.data.json.JSON_Utility;
 import my.chatroom.data.messages.Message;
@@ -57,7 +54,7 @@ public class Server_DB_FireStore implements Server_DB_Interface
 		savedMessages = new ConcurrentHashMap<Integer, Queue<Message>>();
 		try
 		{
-			ApiFuture<QuerySnapshot> future = db.collection("messages").get();
+			ApiFuture<QuerySnapshot> future = db.collection("users").get();
 			List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 			for (DocumentSnapshot document : documents)
 			{
@@ -72,6 +69,27 @@ public class Server_DB_FireStore implements Server_DB_Interface
 		}
 		
 		System.out.println("-----Server_DB Loaded-----\n");
+	}
+
+	@Override
+	public Integer[] getIDs()
+	{
+		List<Integer> IDs = new ArrayList<>();
+		try
+		{
+			ApiFuture<QuerySnapshot> future = db.collection("users").get();
+			List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+			for (DocumentSnapshot document : documents)
+			{
+				IDs.add(((Long) document.get("user_id")).intValue());
+			}
+		} catch (InterruptedException | ExecutionException e)
+		{
+			System.err.println("Server_DB: - Failed to Load User IDs from DB");
+			e.printStackTrace();
+			return null;
+		}
+		return IDs.toArray(new Integer[0]);
 	}
 
 	@Override
@@ -104,6 +122,23 @@ public class Server_DB_FireStore implements Server_DB_Interface
 	}
 
 	@Override
+	public boolean deleteMessages(int user_id)
+	{
+		try
+		{
+			String docID = getDocumentID(user_id);
+			DocumentReference docRef = db.collection("users").document(docID);
+			ApiFuture<WriteResult> future = docRef.update("messages", "[]");
+			System.out.println("Server_DB: Messages Deleted: " + future.get());
+		} catch (Exception e)
+		{
+			System.err.println("Server_DB: - Failed to save savedMessages to DB for " + user_id + e.getMessage());
+			return false;
+		}
+		return false;
+	}
+
+	@Override
 	public boolean saveMessages(int user_id)
 	{
 		String msgs = JSON_Utility.encodeMSGs(savedMessages.get(user_id));
@@ -122,44 +157,6 @@ public class Server_DB_FireStore implements Server_DB_Interface
 	}
 	
 	@Override
-	public boolean deleteMessages(int user_id)
-	{
-		try
-		{
-			String docID = getDocumentID(user_id);
-			DocumentReference docRef = db.collection("users").document(docID);
-			ApiFuture<WriteResult> future = docRef.update("messages", "");
-			System.out.println("Server_DB: Messages Deleted: " + future.get());
-		} catch (Exception e)
-		{
-			System.err.println("Server_DB: - Failed to save savedMessages to DB for " + user_id + e.getMessage());
-			return false;
-		}
-		return false;
-	}
-
-	@Override
-	public Integer[] getIDs()
-	{
-		List<Integer> IDs = new ArrayList<>();
-		try
-		{
-			ApiFuture<QuerySnapshot> future = db.collection("users").get();
-			List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-			for (DocumentSnapshot document : documents)
-			{
-				IDs.add(((Long) document.get("user_id")).intValue());
-			}
-		} catch (InterruptedException | ExecutionException e)
-		{
-			System.err.println("Server_DB: - Failed to Load User IDs from DB");
-			e.printStackTrace();
-			return null;
-		}
-		return IDs.toArray(new Integer[0]);
-	}
-
-	@Override
 	public String getNickName(int user_id)
 	{
 		String nick_name = null;
@@ -175,99 +172,6 @@ public class Server_DB_FireStore implements Server_DB_Interface
 			return null;
 		}
 		return nick_name;
-	}
-
-	@Override
-	public String getUserInfo(int user_id)
-	{
-		User user = null;
-		try
-		{
-			String docID = getDocumentID(user_id);
-			ApiFuture<DocumentSnapshot> future = db.collection("users").document(docID).get();
-			DocumentSnapshot document = future.get();
-			if (document.exists()) user = document.toObject(User.class);
-			else return "No Such User Found in DB.";
-		} catch (Exception e)
-		{
-			System.err.println("Server_DB: - Error Retrieving Nick Name for User ID: " + user_id);
-			e.printStackTrace();
-			return null;
-		}
-		return "User ID: " + user_id + " Nick Name: " + user.getNick_name() + " User Since: " + new Date(user.getSignup_time());
-	}
-
-	@Override
-	public boolean isExist(int user_id)
-	{
-		try
-		{
-			String docID = getDocumentID(user_id);
-			ApiFuture<DocumentSnapshot> future = db.collection("users").document(docID).get();
-			DocumentSnapshot document = future.get();
-			if (document.exists()) return true;
-		} catch (Exception e)
-		{
-			System.err.println("Server_DB: - Error Retrieving Nick Name for User ID: " + user_id);
-			e.printStackTrace();
-		}
-		return false;
-	}
-
-	@Override
-	public int getNextUserID() throws Exception
-	{
-		Query query = db.collection("users").orderBy("user_id", Direction.DESCENDING).limit(1);
-		
-		int lastID = ((Long) query.get().get().getDocuments().get(0).get("user_id")).intValue();
-		
-		return lastID + 1;
-	}
-
-	@Override
-	public User addUser(String nick_name, String password)
-	{
-		User user = null;
-		try
-		{
-			int newID = getNextUserID();
-			user = new User(newID, nick_name, password);
-			ApiFuture<DocumentReference> result = db.collection("users").add(user);
-			System.out.println("Server_DB: New User Saved: " + result.get().getId());
-		} catch (Exception e)
-		{
-			System.err.println("Server_DB: - Failed to add user to DB. " + e.getMessage());
-			e.printStackTrace();
-			return null;
-		}
-		
-		return user;
-	}
-
-	@Override
-	public boolean removeUser(int user_id)
-	{
-		try
-		{
-			String docID = getDocumentID(user_id);
-			ApiFuture<WriteResult> future = db.collection("users").document(docID).delete();
-			System.out.println("Server_DB: User Deleted at: " + future.get().getUpdateTime());
-		} catch (Exception e)
-		{
-			System.err.println("Server_DB: - Error Deleting User ID: " + user_id);
-			e.printStackTrace();
-			return false;
-		}
-		return true;
-	}
-
-	private String getDocumentID(int user_id) throws Exception
-	{
-		ApiFuture<QuerySnapshot> future = db.collection("users").whereEqualTo("user_id", user_id).get();
-		List<QueryDocumentSnapshot> documents = future.get().getDocuments();
-		if (documents.size() > 1) throw new Exception("Got Multiple Documents for User ID: " + user_id);
-		if (documents.size() == 0) throw new Exception("No User ID: " + user_id);
-		return documents.get(0).getId();
 	}
 
 	@Override
@@ -326,6 +230,99 @@ public class Server_DB_FireStore implements Server_DB_Interface
 			return false;
 		}
 		return true;
+	}
+
+	@Override
+	public User addUser(String nick_name, String password)
+	{
+		User user = null;
+		try
+		{
+			int newID = getNextUserID();
+			user = new User(newID, nick_name, password);
+			ApiFuture<DocumentReference> result = db.collection("users").add(user);
+			System.out.println("Server_DB: New User Saved: " + result.get().getId());
+		} catch (Exception e)
+		{
+			System.err.println("Server_DB: - Failed to add user to DB. " + e.getMessage());
+			e.printStackTrace();
+			return null;
+		}
+		
+		return user;
+	}
+
+	@Override
+	public boolean removeUser(int user_id)
+	{
+		try
+		{
+			String docID = getDocumentID(user_id);
+			ApiFuture<WriteResult> future = db.collection("users").document(docID).delete();
+			System.out.println("Server_DB: User Deleted at: " + future.get().getUpdateTime());
+		} catch (Exception e)
+		{
+			System.err.println("Server_DB: - Error Deleting User ID: " + user_id);
+			e.printStackTrace();
+			return false;
+		}
+		return true;
+	}
+
+	@Override
+	public String getUserInfo(int user_id)
+	{
+		User user = null;
+		try
+		{
+			String docID = getDocumentID(user_id);
+			ApiFuture<DocumentSnapshot> future = db.collection("users").document(docID).get();
+			DocumentSnapshot document = future.get();
+			if (document.exists()) user = document.toObject(User.class);
+			else return "No Such User Found in DB.";
+		} catch (Exception e)
+		{
+			System.err.println("Server_DB: - Error Retrieving Nick Name for User ID: " + user_id);
+			e.printStackTrace();
+			return null;
+		}
+		return "User ID: " + user_id + " Nick Name: " + user.getNick_name() + " User Since: " + new Date(user.getSignup_time());
+	}
+
+	@Override
+	public boolean isExist(int user_id)
+	{
+		try
+		{
+			String docID = getDocumentID(user_id);
+			ApiFuture<DocumentSnapshot> future = db.collection("users").document(docID).get();
+			DocumentSnapshot document = future.get();
+			if (document.exists()) return true;
+		} catch (Exception e)
+		{
+			System.err.println("Server_DB: - Error Retrieving Nick Name for User ID: " + user_id);
+			e.printStackTrace();
+		}
+		return false;
+	}
+
+	@Override
+	public int getNextUserID() throws Exception
+	{
+		Query query = db.collection("users").orderBy("user_id", Direction.DESCENDING).limit(1);
+		
+		int lastID = ((Long) query.get().get().getDocuments().get(0).get("user_id")).intValue();
+		
+		return lastID + 1;
+	}
+
+	private String getDocumentID(int user_id) throws Exception
+	{
+		ApiFuture<QuerySnapshot> future = db.collection("users").whereEqualTo("user_id", user_id).get();
+		List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+		if (documents.size() > 1) throw new Exception("Got Multiple Documents for User ID: " + user_id);
+		if (documents.size() == 0) throw new Exception("No User ID: " + user_id);
+		return documents.get(0).getId();
 	}
 
 }

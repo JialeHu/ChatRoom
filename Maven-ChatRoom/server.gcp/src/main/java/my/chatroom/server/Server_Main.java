@@ -9,10 +9,10 @@ import java.io.ObjectOutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -46,7 +46,7 @@ public class Server_Main implements Runnable
 	private final ExecutorService threadPool;
 	
 	// Data
-	private final ArrayList<Integer> offlineUsers; // [user_id]
+	private final HashSet<Integer> offlineUsers; // [user_id]
 	private final ConcurrentHashMap<Integer, ObjectOutputStream> onlineUsers; // {user_id=oos}
 	private final ConcurrentHashMap<Integer, Queue<Message>> savedMessages; // {recipient=[messages]}
 	
@@ -66,7 +66,7 @@ public class Server_Main implements Runnable
 		// Load Users Lists from DB
 		System.out.println("Server_Main: Loading Users ...");
 		onlineUsers = new ConcurrentHashMap<Integer, ObjectOutputStream>();
-		offlineUsers = new ArrayList<Integer>(Arrays.asList(dbServer.getIDs()));
+		offlineUsers = new HashSet<Integer>(Arrays.asList(dbServer.getIDs()));
 		System.out.println("Server_Main: Offline & Online Users: [ID]");
 		System.out.println(offlineUsers);
 		System.out.println(onlineUsers.keySet());
