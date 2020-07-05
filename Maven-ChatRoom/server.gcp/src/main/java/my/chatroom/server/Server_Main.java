@@ -202,6 +202,7 @@ public class Server_Main implements Runnable
 		// Stack Variables
 		Socket			   	s				= null;
 		String				clientAddress	= null;
+		int					clientPort		= 0;
 		ObjectInputStream	ois				= null;
 		ObjectOutputStream	oos				= null;
 		Object				joinMsg			= null;
@@ -211,7 +212,8 @@ public class Server_Main implements Runnable
 		try {
 			s = ss.accept();
 			clientAddress = s.getInetAddress().getHostAddress();
-			System.out.println("Server_Main: New client connecting from " + clientAddress);
+			clientPort = s.getPort();
+			System.out.println("Server_Main: New client connecting from " + clientAddress + ":" + clientPort);
 			ois = new ObjectInputStream(s.getInputStream());  
 			joinMsg = ois.readObject();    
 			oos = new ObjectOutputStream(s.getOutputStream());
