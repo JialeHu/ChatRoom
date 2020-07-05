@@ -92,9 +92,9 @@ public class Server_Main implements Runnable
 		}
 		
 		// Load ThreadPool
-		int numCores = Runtime.getRuntime().availableProcessors();
-		threadPool = Executors.newFixedThreadPool(numCores);
-		System.out.println("Server_Main: Thread Pool Loaded with " + numCores + " Threads");
+		int numThreads = Runtime.getRuntime().availableProcessors() * (100);
+		threadPool = Executors.newFixedThreadPool(numThreads);
+		System.out.println("Server_Main: Thread Pool Loaded with " + numThreads + " Threads");
 		
 		// Start thread for each client
 		threadPool.execute(this);
