@@ -274,7 +274,8 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 				return;
 			}
 			messageTextStr = "";
-			messageTextField.setText(messageTextFieldStr);
+			if (messageTextField.isFocusOwner()) messageTextField.setText(messageTextStr);
+			else messageTextField.setText(messageTextFieldStr);
 		}
 		
 	}
@@ -474,20 +475,20 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 		return selectedIDs;
 	}
 	
-// Get nick name API
-	public String getNickName(int user_id)
-	{
-		String nickName = onlineUsers.get(user_id);
-		if (nickName == null) nickName = offlineUsers.get(user_id);
-		return nickName;
-	}
-	
 // Get my info API
 	public String getMyInfo() throws IOException, InterruptedException
 	{
 		oos.writeObject(new Message(null, user_id, MsgType.USER_INFO));
 		Message reply = msgQueue.take();
 		return reply.getMsg();
+	}
+
+// Get nick name API
+	public String getNickName(int user_id)
+	{
+		String nickName = onlineUsers.get(user_id);
+		if (nickName == null) nickName = offlineUsers.get(user_id);
+		return nickName;
 	}
 	
 // Set my nick name API
@@ -497,7 +498,7 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 		Message reply = msgQueue.take();
 		return reply;
 	}
-	
+
 // Set my password API
 	public Message setPassword(String oldPw, String newPw) throws IOException, InterruptedException
 	{
@@ -505,7 +506,7 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 		Message reply = msgQueue.take();
 		return reply;
 	}
-	
+
 // Delete my account API
 	public Message removeUser() throws IOException, InterruptedException
 	{
