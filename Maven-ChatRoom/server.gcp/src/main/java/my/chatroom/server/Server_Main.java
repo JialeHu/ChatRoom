@@ -275,8 +275,8 @@ public class Server_Main implements Runnable
 						return;
 					}
 					String msg = ((Message) joinMsg).getMsg();
-					int blankOffset = msg.indexOf(" ");
-					if (blankOffset < 0 || blankOffset >= 50)
+					int splitOffset = msg.indexOf("|");
+					if (splitOffset < 0 || splitOffset >= 50)
 					{
 						// Invalid nick_name password format
 						try
@@ -288,7 +288,7 @@ public class Server_Main implements Runnable
 						}
 						System.out.println("Server_Main: - Invalid Nick Name from " + clientAddress);
 						break;
-					} else if (msg.length()-blankOffset < 6 || msg.length()-blankOffset >= 50)
+					} else if (msg.length()-splitOffset < 6 || msg.length()-splitOffset >= 50)
 					{
 						// Invalid password
 						System.out.println("Server_Main: - Invalid Password from " + clientAddress);
@@ -301,8 +301,8 @@ public class Server_Main implements Runnable
 						}
 						break;
 					}
-					String nick_name = msg.substring(0,blankOffset);
-					String password = msg.substring(blankOffset+1);
+					String nick_name = msg.substring(0,splitOffset);
+					String password = msg.substring(splitOffset+1);
 					user_id = addUser(nick_name, password);
 					if (user_id < 0)
 					{
