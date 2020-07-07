@@ -570,14 +570,21 @@ public class Server_Main implements Runnable
 	 */
 	private void leave(int user_id, ObjectOutputStream oos)
 	{
+		// Remove Situation
+		if (!onlineUsers.containsKey(user_id))
+		{
+			System.out.println("Server_Main: Leaving, user " + user_id + " removed");
+			return;
+		}
 		// Re-Join Situation
 		if (onlineUsers.get(user_id) != oos)
 		{
-			System.out.println("Server_Main: Re-joining, previous session for " + user_id + " terminated");
+			System.out.println("Server_Main: Leaving, new session for " + user_id + " is re-joining");
 			return;
 		}
 		// Update Users Lists
-		if (onlineUsers.containsKey(user_id)) offlineUsers.add(user_id);
+		System.out.println("Server_Main: Leaving: " + user_id);
+		offlineUsers.add(user_id);
 		onlineUsers.remove(user_id);
 		sendUserList();
 		System.out.println("Server_Main: Offline & Online Users: [ID]");
