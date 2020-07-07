@@ -318,6 +318,7 @@ public class Server_Main implements Runnable
 					}
 					// Update Users Lists
 					offlineUsers.add(user_id);
+					sendUserList();
 					System.out.println("Server_Main: Offline & Online Users: [ID]");
 					System.out.println(offlineUsers);
 					System.out.println(onlineUsers.keySet());
@@ -425,10 +426,10 @@ public class Server_Main implements Runnable
 				// Update Users Lists
 				offlineUsers.remove((Integer) user_id);
 				onlineUsers.put(user_id, oos);
+				sendUserList();
 				System.out.println("Server_Main: Offline & Online Users: [ID]");
 				System.out.println(offlineUsers);
 				System.out.println(onlineUsers.keySet());
-				sendUserList();
 				System.out.println("Server_Main: Join succeed: " + user_id);
 			} else
 			{
@@ -502,9 +503,11 @@ public class Server_Main implements Runnable
 				case RM_USER:
 					if (dbServer.removeUser(user_id))
 					{
-						savedMessages.remove(user_id);
 						oos.writeObject(new Message(MsgType.DONE, null));
 						oos.writeObject(new Message(MsgType.LOGOUT, "User Deleted"));
+						savedMessages.remove(user_id);
+						onlineUsers.remove(user_id);
+						sendUserList();
 						return;
 					} else 
 					{
@@ -576,10 +579,10 @@ public class Server_Main implements Runnable
 		// Update Users Lists
 		if (onlineUsers.containsKey(user_id)) offlineUsers.add(user_id);
 		onlineUsers.remove(user_id);
+		sendUserList();
 		System.out.println("Server_Main: Offline & Online Users: [ID]");
 		System.out.println(offlineUsers);
 		System.out.println(onlineUsers.keySet());
-		sendUserList();
 		System.out.println("Server_Main: Leave succeed: " + user_id);
 	}
 
