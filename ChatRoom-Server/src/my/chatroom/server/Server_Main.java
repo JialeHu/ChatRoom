@@ -503,6 +503,7 @@ public class Server_Main implements Runnable
 						oos.writeObject(new Message(MsgType.DONE, null));
 						oos.writeObject(new Message(MsgType.LOGOUT, "User Deleted"));
 						savedMessages.remove(user_id);
+						onlineUsers.remove(user_id);
 						sendUserList();
 						return;
 					} else 
