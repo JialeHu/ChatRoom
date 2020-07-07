@@ -187,7 +187,7 @@ public final class Client_Login implements ActionListener
 			System.out.println(nick_name + " " + pw1 + " " + pw2);
 			
 			// Send ADD_USER Message to Server
-			Message joinMsg = new Message(nick_name + " " + pw, 0, MsgType.ADD_USER);
+			Message joinMsg = new Message(nick_name + "|" + pw, 0, MsgType.ADD_USER);
 			try
 			{
 				oos.writeObject(joinMsg);

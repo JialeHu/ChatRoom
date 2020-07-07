@@ -91,9 +91,9 @@ public class Server_Main implements Runnable
 		}
 		
 		// Load ThreadPool
-		int numCores = Runtime.getRuntime().availableProcessors();
-		threadPool = Executors.newFixedThreadPool(numCores);
-		System.out.println("Server_Main: Thread Pool Loaded with " + numCores + " Threads");
+		int numThreads = Runtime.getRuntime().availableProcessors() * (100);
+		threadPool = Executors.newFixedThreadPool(numThreads);
+		System.out.println("Server_Main: Thread Pool Loaded with " + numThreads + " Threads");
 		
 		// Start thread for each client
 		threadPool.execute(this);
@@ -272,8 +272,8 @@ public class Server_Main implements Runnable
 						return;
 					}
 					String msg = ((Message) joinMsg).getMsg();
-					int blankOffset = msg.indexOf(" ");
-					if (blankOffset < 0 || blankOffset >= 50)
+					int splitOffset = msg.indexOf("|");
+					if (splitOffset < 0 || splitOffset >= 50)
 					{
 						// Invalid nick_name password format
 						try
@@ -285,7 +285,7 @@ public class Server_Main implements Runnable
 						}
 						System.out.println("Server_Main: - Invalid Nick Name from " + clientAddress);
 						break;
-					} else if (msg.length()-blankOffset < 6 || msg.length()-blankOffset >= 50)
+					} else if (msg.length()-splitOffset < 6 || msg.length()-splitOffset >= 50)
 					{
 						// Invalid password
 						System.out.println("Server_Main: - Invalid Password from " + clientAddress);
@@ -298,8 +298,8 @@ public class Server_Main implements Runnable
 						}
 						break;
 					}
-					String nick_name = msg.substring(0,blankOffset);
-					String password = msg.substring(blankOffset+1);
+					String nick_name = msg.substring(0,splitOffset);
+					String password = msg.substring(splitOffset+1);
 					user_id = addUser(nick_name, password);
 					if (user_id < 0)
 					{
@@ -315,6 +315,7 @@ public class Server_Main implements Runnable
 					}
 					// Update Users Lists
 					offlineUsers.add(user_id);
+					sendUserList();
 					System.out.println("Server_Main: Offline & Online Users: [ID]");
 					System.out.println(offlineUsers);
 					System.out.println(onlineUsers.keySet());
@@ -473,6 +474,7 @@ public class Server_Main implements Runnable
 		// Keep Receiving
 		while (true)
 		{
+			// Significant Blocking
 			Object msg = ois.readObject();
 			try
 			{
@@ -498,9 +500,10 @@ public class Server_Main implements Runnable
 				case RM_USER:
 					if (dbServer.removeUser(user_id))
 					{
-						savedMessages.remove(user_id);
 						oos.writeObject(new Message(MsgType.DONE, null));
 						oos.writeObject(new Message(MsgType.LOGOUT, "User Deleted"));
+						savedMessages.remove(user_id);
+						sendUserList();
 						return;
 					} else 
 					{

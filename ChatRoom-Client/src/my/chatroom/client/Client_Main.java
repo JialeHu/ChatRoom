@@ -527,6 +527,13 @@ public final class Client_Main implements ActionListener, ListSelectionListener,
 		{
 			new Client_Error(dim, "Nick Name Cannot Exceed 30 Characters", user_id);
 			return null;
+		} 
+		
+		for (char ch : nickName.toCharArray())
+		{
+			if (Character.isLetterOrDigit(ch) || Character.isSpaceChar(ch)) continue;
+			new Client_Error(dim, "Nick Name Can Only Contain Letters", user_id);
+			return null;
 		}
 		return nickName;
 	}
