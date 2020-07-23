@@ -8,24 +8,14 @@ package my.chatroom.data.messages;
  *
  */
 
-public enum MsgType
-{
-	MESSAGE,
-	FILE,
-	
-	// From Client
-	JOIN,
-	LEAVE,
-	
-	USER_INFO,
-	ADD_USER,
-	RM_USER,
-	SET_NICKNAME,
-	SET_PASSWORD,
-	
-	// From Server
-	USER_LIST,
-	REFUSE,
-	DONE,
-	LOGOUT
+public enum MsgType {
+    MESSAGE, FILE,
+
+    // From Client
+    JOIN, LEAVE,
+
+    USER_INFO, ADD_USER, RM_USER, SET_NICKNAME, SET_PASSWORD,
+
+    // From Server
+    USER_LIST, REFUSE, DONE, LOGOUT
 }
